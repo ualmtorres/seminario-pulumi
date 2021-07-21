@@ -1,0 +1,59 @@
+////
+NO CAMBIAR!!
+Codificación, idioma, tabla de contenidos, tipo de documento
+////
+:encoding: utf-8
+:lang: es
+:toc: right
+:toc-title: Tabla de contenidos
+:doctype: book
+:imagesdir: ./images
+:linkattrs:
+
+////
+Nombre y título del trabajo
+////
+# Infraestructura como código con Pulumi
+Servicio de las Tecnologías de la Información y las Comunicaciones - Universidad de Almería
+
+image::logocloudstic.png[]
+
+// NO CAMBIAR!! (Entrar en modo no numerado de apartados)
+:numbered!: 
+
+
+[abstract]
+== Resumen
+////
+COLOCA A CONTINUACION EL RESUMEN
+////
+Los produtos habituales para la Infraestructura como código, como Terraform, Ansible, Chef, Puppet, y demás, suelen contar con su propia sintaxis, lo que dificulta en cierta medida su uso. Pulumi permite la creación de la infraestructura usando lenguajes de programación populares, como TypeScript, JavaScript, Python, Go o C#. De esta forma podemos usar nuestro lenguaje habitual para la creación de la infraestructura de forma sencilla, sin tener que pasar a otro lenguaje y beneficiándonos del manejo de variables y construcciones de programación habituales como los bucles y condiciones, aspectos básicos pero que no son demasiado sencillos de usar en el resto de productos.
+
+////
+COLOCA A CONTINUACION LOS OBJETIVOS
+////
+.Objetivos
+* Aprender a hacer despliegues de proyectos sencillos.
+* Realizar cambios sobre la infraestructura.
+* Gestionar errores de despliegues corruptos.
+
+[TIP]
+====
+[line-through]##Disponible el https://github.como/ualmtorres[repositorio] usado en este tutorial##.
+====
+
+// Entrar en modo numerado de apartados
+:numbered:
+
+## Introducción
+
+La Infraestructura como código (IaC, Infrastructure as Code) permite la definición y mantenimiento de la infraestructura mediante código. Esto permite la automatización de la creación de la infraestructura en lugar de hacerlo manualmente. Se trata de un proceso declarativo en el que mediante una serie de archivos se especifica de forma declarativa la infraestructura y la configuración que se necesita (p.e. un entorno de backend con un volumen de almacenamiento, una máquina virtual con MySQL instalado y conectada al volumen creado, una máquina virtual con un framework instalado como Express, la configuración de red y de grupos de seguridad, ....). De esta forma se evita tener que preparar manualmente las máquinas virtuales, sistemas operativos, almacenamiento y configuración, obteniéndose en su lugar la definición de un entorno que garantiza ser replicable, documentando las especificaciones y evitando la realización de cambios sobre marcha y que no queden documentados. Con IaC, los cambios se hacen sobre el código y se aplican ejecutándola, en lugar de hacerlos en caliente mediante comandos sobre la infraestructura. Además, la práctica de control de versiones, como cualquier otro desarrollo software, permitirá llevar un control de cada uno de los cambios introducidos en la configuración de la infraestructura. 
+
+Entre los productos más populares de IaC se encuentran Terraform, Ansible, Chef, Puppet, ... En estas propuestas, la infraestructura se especifica de formas muy variadas, como en https://ualmtorres.github.io/CursoAnsible/tutorial/#trueinstalaci-n-de-paquetes[formato YAML] en el caso de Ansible, o en su propio lenguaje DSL (Domain Specific Language) como el https://github.com/ualmtorres/terraform-examples/blob/master/GCP/05-instancia-aprovisionada/main.tf[HCL] (Hashicorp Configuration Language) de Terraform y el https://puppet.com/docs/puppet/7/lang_visual_index.html#lang_examples_resource-resource-declaration[Puppet Language] de Puppet, pasando por Chef, que usa https://www.tutorialspoint.com/chef/chef_testing_cookbooks.htm[Ruby como sintaxis] para la definición de la infraestructura. 
+
+[NOTE]
+====
+En estos enlaces puedes consultar otros tutoriales sobre https://ualmtorres.github.io/SeminarioTerraform/[Terraform] y https://ualmtorres.github.io/CursoAnsible/tutorial/[Ansible].
+====
+
+En este contexto surge https://www.pulumi.com/[Pulumi], un nuevo producto de IaC que se diferencia del resto en que usa lenguajes de programación convencionales, como TypeScript, JavaScript, Python, Go o C#. Esto lo hace especialmente interesante, ya que no se tendrá que aprender un lenguaje extra para el manejo de la infraestructura y se facilita el uso de variables y construcciones de programación como bucles y condiciones.
