@@ -430,6 +430,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel1">
 <li><a href="#trueresumen">Resumen</a></li>
 <li><a href="#trueintroducci-n">1. Introducción</a></li>
+<li><a href="#trueconfiguraci-n-de-pulumi">2. Configuración de Pulumi</a></li>
+<li><a href="#truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack">3. Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</a>
+<ul class="sectlevel2">
+<li><a href="#truedescarga-de-las-credenciales-del-proyecto-openstack">3.1. Descarga de las credenciales del proyecto OpenStack</a></li>
+<li><a href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto">3.2. Creación y configuración inicial del proyecto</a></li>
+</ul>
+</li>
+<li><a href="#truescript-de-inicializaci-n-de-rancher">4. Script de inicialización de Rancher</a></li>
 </ul>
 </div>
 </div>
@@ -503,14 +511,214 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </table>
 </div>
 <div class="paragraph">
-<p>En este contexto surge <a href="https://www.pulumi.com/">Pulumi</a>, un nuevo producto de IaC que se diferencia del resto en que usa lenguajes de programación convencionales, como TypeScript, JavaScript, Python, Go o C#. Esto lo hace especialmente interesante, ya que no se tendrá que aprender un lenguaje extra para el manejo de la infraestructura y se facilita el uso de variables y construcciones de programación como bucles y condiciones.</p>
+<p>En este contexto surge <a href="https://www.pulumi.com/">Pulumi</a>, un nuevo producto de IaC que se diferencia del resto en que usa lenguajes de programación convencionales, como TypeScript, JavaScript, Python, Go o C#. Esto lo hace especialmente interesante, ya que no se tendrá que aprender un lenguaje extra para el manejo de infraestructura cloud y se facilita el uso de variables y construcciones de programación como bucles y condiciones.</p>
+</div>
+<div class="paragraph">
+<p>Pulumi ofrece soporte para lo principales proveedores cloud, como Amazon, Google Cloud, Microsoft Azure, Digital Ocean, Linode, OpenStack, vSphere, y demás, así como para Kubernetes, proveedores de infraestructura, bases de datos, monitorización y sistemas de control de versiones.</p>
+</div>
+<div class="paragraph">
+<p>En este tutorial nos centraremos en la creación de un cluster de Kubernetes gestionado con Rancher y usando OpenStack como proveedor de infraestructura. Usaremos TypeScript como lenguaje de desarrollo</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="trueconfiguraci-n-de-pulumi"><a class="anchor" href="#trueconfiguraci-n-de-pulumi"></a>2. Configuración de Pulumi</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>La instalación la haremos siguiendo la <a href="https://www.pulumi.com/docs/get-started/install/">guía oficial de instalación</a>.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>En macOS la haremos mediante <a href="https://brew.sh/">Homebrew</a> con <code>brew install pulumi</code>.</p>
+</li>
+<li>
+<p>En Windows la haremos mediante <a href="https://chocolatey.org/">Chocolatey</a> con <code>choco install pulumi</code>.</p>
+</li>
+<li>
+<p>En Linux la haremos ejecutando el script <code>curl -fsSL <a href="https://get.pulumi.com" class="bare">https://get.pulumi.com</a> | sh</code>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Una vez instalado comprobaremos que todo es correcto con:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash" data-lang="bash">$ pulumi version
+v3.7.0</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack"><a class="anchor" href="#truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack"></a>3. Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>El caso de uso que estudiaremos parte de un proyecto OpenStack creado. En dicho proyecto se configurarán mediante Pulumi los grupos de seguridad, se creará una instancia que se aprovisionará durante su inicio con Rancher y se finalizará asignándole una dirección IP flotante.</p>
+</div>
+<div class="sect2">
+<h3 id="truedescarga-de-las-credenciales-del-proyecto-openstack"><a class="anchor" href="#truedescarga-de-las-credenciales-del-proyecto-openstack"></a>3.1. Descarga de las credenciales del proyecto OpenStack</h3>
+<div class="paragraph">
+<p>Desde la interfaz gráfica Horizon de OpenStack seguiremos estos casos para la descarga de credenciales del usuario en el proyecto OpenStack a utilizar.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Seleccionar el proyecto en OpenStack en el desplegable de proyectos del usuario.</p>
+</li>
+<li>
+<p>En el desplegable del menú del usuario seleccionar <code>OpenStack RC File</code>.</p>
+</li>
+<li>
+<p>Cargar las credenciales descargadas con <code>source &lt;credentials-filename&gt;</code>. Introducir la contraseña solicitada de acceso a OpenStack.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Para usuarios de Windows se recomienda tener instalado <a href="https://ubuntu.com/wsl">WSL</a>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="truecreaci-n-y-configuraci-n-inicial-del-proyecto"><a class="anchor" href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto"></a>3.2. Creación y configuración inicial del proyecto</h3>
+<div class="paragraph">
+<p>Desde dentro de un directorio vacío creado para el proyecto crearemos el proyecto Pulumi con el comando <code>pulumi new</code>. Si no indicamos nada más, habrá que seleccionar el tipo de proyecto eligiendo tanto la plataforma como el lenguaje. Una forma más rápida es pasar el parámetro de configuración de la pareja plataforma-lenguaje directamente al crear el proyecto</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash" data-lang="bash">$ pulumi new openstack-typescript <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Nuevo proyecto para OpenStack como provider y TypeScript como lenguaje.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>A continuación aceptaremos el nombre del proyecto, completaremos la descripción con <code>Configuración de MV OpenStack</code> y aceptaremos el nombre del stack.</p>
+</div>
+<div class="paragraph">
+<p>Por último instalaremos el paquete de OpenStack para Pulumi que instalará los componentes de OpenStack gestionables desde Pulumi.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash" data-lang="bash">$ npm install @pulumi/openstack</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Como resultado tendremos un proyecto con la estructura siguiente:</p>
+</div>
+<div class="paragraph">
+<p>$$$</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truescript-de-inicializaci-n-de-rancher"><a class="anchor" href="#truescript-de-inicializaci-n-de-rancher"></a>4. Script de inicialización de Rancher</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash" data-lang="bash">#!/bin/bash
+
+RANCHERPASSWORD='yourpasswordhere'
+RANCHERSERVER='https://your.url.here.com'
+
+echo "Instalando Docker"
+
+apt-get update
+apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common \
+    jq
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+apt-key fingerprint 0EBFCD88
+add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+apt-get update
+apt-get install -y docker-ce
+groupadd docker
+usermod -aG docker ubuntu
+systemctl enable docker
+
+echo "Obteniendo certificados"
+
+mkdir /home/ubuntu/rancherdata
+mkdir /home/ubuntu/certificados
+
+wget -O /home/ubuntu/certificados/star_stic_ual_es.crt https://your.certificate.server.here.com/star_stic_ual_es_completa.crt
+wget -O /home/ubuntu/certificados/star_stic_ual_es.key https://your.certificate.server.here.com/star_stic_ual_es.key
+wget -O /home/ubuntu/certificados/DigiCertCA.crt https://your.certificate.server.here.com/DigiCertCA.crt
+
+docker run \
+    --privileged -d \
+    --restart=unless-stopped \
+    -p 80:80 -p 443:443 \
+    -v /home/ubuntu/rancherdata:/var/lib/rancher \
+    -v /home/ubuntu/certificados/star_stic_ual_es.crt:/etc/rancher/ssl/cert.pem \
+    -v /home/ubuntu/certificados/star_stic_ual_es.key:/etc/rancher/ssl/key.pem \
+    -v /home/ubuntu/certificados/DigiCertCA.crt:/etc/rancher/ssl/cacerts.pem \
+    --name rancher \
+    rancher/rancher:v2.5.8 \
+    --features=unsupported-storage-drivers=true
+
+echo "Configurando Rancher"
+
+while ! curl -k https://localhost/ping; do sleep 3; done
+
+# First Rancher Login
+LOGINRESPONSE=`curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"admin"}' --insecure`
+LOGINTOKEN=`echo $LOGINRESPONSE | jq -r .token`
+
+# Change password
+curl -s 'https://127.0.0.1/v3/users?action=changepassword' \
+    -H 'content-type: application/json' \
+    -H "Authorization: Bearer $LOGINTOKEN" \
+    --data-binary '{"currentPassword":"admin","newPassword":"'$RANCHERPASSWORD'"}' \
+    --insecure
+
+# Configure server-url
+curl -s 'https://127.0.0.1/v3/settings/server-url' \
+    -H 'content-type: application/json' \
+    -H "Authorization: Bearer $LOGINTOKEN" \
+    -X PUT \
+    --data-binary '{"name":"server-url","value":"'$RANCHERSERVER'"}' \
+    --insecure
+
+# Activate OpenStack node driver
+curl -s 'https://127.0.0.1/v3/nodeDrivers/openstack?action=activate' \
+    -H 'content-type: application/json' \
+    -H "Authorization: Bearer $LOGINTOKEN" \
+    -X POST \
+    --insecure
+
+exit 0</code></pre>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-21 07:13:18 CEST
+Last updated 2021-07-21 09:48:39 CEST
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/styles/github.min.css">

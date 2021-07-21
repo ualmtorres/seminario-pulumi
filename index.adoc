@@ -56,4 +56,149 @@ Entre los productos más populares de IaC se encuentran Terraform, Ansible, Chef
 En estos enlaces puedes consultar otros tutoriales sobre https://ualmtorres.github.io/SeminarioTerraform/[Terraform] y https://ualmtorres.github.io/CursoAnsible/tutorial/[Ansible].
 ====
 
-En este contexto surge https://www.pulumi.com/[Pulumi], un nuevo producto de IaC que se diferencia del resto en que usa lenguajes de programación convencionales, como TypeScript, JavaScript, Python, Go o C#. Esto lo hace especialmente interesante, ya que no se tendrá que aprender un lenguaje extra para el manejo de la infraestructura y se facilita el uso de variables y construcciones de programación como bucles y condiciones.
+En este contexto surge https://www.pulumi.com/[Pulumi], un nuevo producto de IaC que se diferencia del resto en que usa lenguajes de programación convencionales, como TypeScript, JavaScript, Python, Go o C#. Esto lo hace especialmente interesante, ya que no se tendrá que aprender un lenguaje extra para el manejo de infraestructura cloud y se facilita el uso de variables y construcciones de programación como bucles y condiciones.
+
+Pulumi ofrece soporte para lo principales proveedores cloud, como Amazon, Google Cloud, Microsoft Azure, Digital Ocean, Linode, OpenStack, vSphere, y demás, así como para Kubernetes, proveedores de infraestructura, bases de datos, monitorización y sistemas de control de versiones.
+
+En este tutorial nos centraremos en la creación de un cluster de Kubernetes gestionado con Rancher y usando OpenStack como proveedor de infraestructura. Usaremos TypeScript como lenguaje de desarrollo
+
+
+## Configuración de Pulumi
+
+La instalación la haremos siguiendo la https://www.pulumi.com/docs/get-started/install/[guía oficial de instalación]. 
+
+* En macOS la haremos mediante https://brew.sh/[Homebrew] con `brew install pulumi`.
+* En Windows la haremos mediante https://chocolatey.org/[Chocolatey] con `choco install pulumi`.
+* En Linux la haremos ejecutando el script `curl -fsSL https://get.pulumi.com | sh`.
+
+Una vez instalado comprobaremos que todo es correcto con:
+
+[source, bash]
+----
+$ pulumi version
+v3.7.0
+----
+
+## Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack
+
+El caso de uso que estudiaremos parte de un proyecto OpenStack creado. En dicho proyecto se configurarán mediante Pulumi los grupos de seguridad, se creará una instancia que se aprovisionará durante su inicio con Rancher y se finalizará asignándole una dirección IP flotante.
+
+### Descarga de las credenciales del proyecto OpenStack
+
+Desde la interfaz gráfica Horizon de OpenStack seguiremos estos casos para la descarga de credenciales del usuario en el proyecto OpenStack a utilizar.
+
+* Seleccionar el proyecto en OpenStack en el desplegable de proyectos del usuario.
+* En el desplegable del menú del usuario seleccionar `OpenStack RC File`.
+* Cargar las credenciales descargadas con `source <credentials-filename>`. Introducir la contraseña solicitada de acceso a OpenStack.
+
+[TIP]
+====
+Para usuarios de Windows se recomienda tener instalado https://ubuntu.com/wsl[WSL]. 
+====
+
+### Creación y configuración inicial del proyecto
+
+Desde dentro de un directorio vacío creado para el proyecto crearemos el proyecto Pulumi con el comando `pulumi new`. Si no indicamos nada más, habrá que seleccionar el tipo de proyecto eligiendo tanto la plataforma como el lenguaje. Una forma más rápida es pasar el parámetro de configuración de la pareja plataforma-lenguaje directamente al crear el proyecto
+
+[source,bash]
+----
+$ pulumi new openstack-typescript <1>
+----
+<1> Nuevo proyecto para OpenStack como provider y TypeScript como lenguaje.
+
+A continuación aceptaremos el nombre del proyecto, completaremos la descripción con `Configuración de MV OpenStack` y aceptaremos el nombre del stack.
+
+Por último instalaremos el paquete de OpenStack para Pulumi que instalará los componentes de OpenStack gestionables desde Pulumi.
+
+[source, bash]
+----
+$ npm install @pulumi/openstack
+----
+
+Como resultado tendremos un proyecto con la estructura siguiente:
+
+$$$
+
+## Script de inicialización de Rancher
+
+[source,bash]
+----
+#!/bin/bash
+
+RANCHERPASSWORD='yourpasswordhere'
+RANCHERSERVER='https://your.url.here.com'
+
+echo "Instalando Docker"
+
+apt-get update
+apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common \
+    jq
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+apt-key fingerprint 0EBFCD88
+add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+apt-get update
+apt-get install -y docker-ce
+groupadd docker
+usermod -aG docker ubuntu
+systemctl enable docker
+
+echo "Obteniendo certificados"
+
+mkdir /home/ubuntu/rancherdata
+mkdir /home/ubuntu/certificados
+
+wget -O /home/ubuntu/certificados/star_stic_ual_es.crt https://your.certificate.server.here.com/star_stic_ual_es_completa.crt
+wget -O /home/ubuntu/certificados/star_stic_ual_es.key https://your.certificate.server.here.com/star_stic_ual_es.key
+wget -O /home/ubuntu/certificados/DigiCertCA.crt https://your.certificate.server.here.com/DigiCertCA.crt
+
+docker run \
+    --privileged -d \
+    --restart=unless-stopped \
+    -p 80:80 -p 443:443 \
+    -v /home/ubuntu/rancherdata:/var/lib/rancher \
+    -v /home/ubuntu/certificados/star_stic_ual_es.crt:/etc/rancher/ssl/cert.pem \
+    -v /home/ubuntu/certificados/star_stic_ual_es.key:/etc/rancher/ssl/key.pem \
+    -v /home/ubuntu/certificados/DigiCertCA.crt:/etc/rancher/ssl/cacerts.pem \
+    --name rancher \
+    rancher/rancher:v2.5.8 \
+    --features=unsupported-storage-drivers=true
+
+echo "Configurando Rancher"
+
+while ! curl -k https://localhost/ping; do sleep 3; done
+
+# First Rancher Login
+LOGINRESPONSE=`curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"admin"}' --insecure`
+LOGINTOKEN=`echo $LOGINRESPONSE | jq -r .token`
+
+# Change password
+curl -s 'https://127.0.0.1/v3/users?action=changepassword' \
+    -H 'content-type: application/json' \
+    -H "Authorization: Bearer $LOGINTOKEN" \
+    --data-binary '{"currentPassword":"admin","newPassword":"'$RANCHERPASSWORD'"}' \
+    --insecure
+
+# Configure server-url
+curl -s 'https://127.0.0.1/v3/settings/server-url' \
+    -H 'content-type: application/json' \
+    -H "Authorization: Bearer $LOGINTOKEN" \
+    -X PUT \
+    --data-binary '{"name":"server-url","value":"'$RANCHERSERVER'"}' \
+    --insecure
+
+# Activate OpenStack node driver
+curl -s 'https://127.0.0.1/v3/nodeDrivers/openstack?action=activate' \
+    -H 'content-type: application/json' \
+    -H "Authorization: Bearer $LOGINTOKEN" \
+    -X POST \
+    --insecure
+
+exit 0
+----
