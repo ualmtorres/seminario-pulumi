@@ -431,13 +431,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#trueresumen">Resumen</a></li>
 <li><a href="#trueintroducci-n">1. Introducción</a></li>
 <li><a href="#trueconfiguraci-n-de-pulumi">2. Configuración de Pulumi</a></li>
-<li><a href="#truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack">3. Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</a>
+<li><a href="#trueflujo-de-trabajo-con-pulumi">3. Flujo de trabajo con Pulumi</a></li>
+<li><a href="#truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack">4. Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</a>
 <ul class="sectlevel2">
-<li><a href="#truedescarga-de-las-credenciales-del-proyecto-openstack">3.1. Descarga de las credenciales del proyecto OpenStack</a></li>
-<li><a href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto">3.2. Creación y configuración inicial del proyecto</a></li>
+<li><a href="#truerecursos-del-paquete-pulumi-para-openstack">4.1. Recursos del paquete Pulumi para OpenStack</a></li>
+<li><a href="#truedescarga-de-las-credenciales-del-proyecto-openstack">4.2. Descarga de las credenciales del proyecto OpenStack</a></li>
+<li><a href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto">4.3. Creación y configuración inicial del proyecto</a></li>
+<li><a href="#trueconfiguraci-n-de-las-reglas-de-seguridad">4.4. Configuración de las reglas de seguridad</a></li>
+<li><a href="#truescript-de-inicializaci-n-de-rancher">4.5. Script de inicialización de Rancher</a></li>
 </ul>
 </li>
-<li><a href="#truescript-de-inicializaci-n-de-rancher">4. Script de inicialización de Rancher</a></li>
+<li><a href="#trueeliminaci-n-de-un-proyecto">5. Eliminación de un proyecto</a></li>
 </ul>
 </div>
 </div>
@@ -552,13 +556,53 @@ v3.7.0</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack"><a class="anchor" href="#truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack"></a>3. Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</h2>
+<h2 id="trueflujo-de-trabajo-con-pulumi"><a class="anchor" href="#trueflujo-de-trabajo-con-pulumi"></a>3. Flujo de trabajo con Pulumi</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>El caso de uso que estudiaremos parte de un proyecto OpenStack creado. En dicho proyecto se configurarán mediante Pulumi los grupos de seguridad, se creará una instancia que se aprovisionará durante su inicio con Rancher y se finalizará asignándole una dirección IP flotante.</p>
+<p>El flujo de trabajo habitual en Pulumi consiste en la creación del proyecto, codificación de la infraestuctura inicial, despliegue de cambios. Sin embargo, no se trata de un proceso secuencial, sino que en realidad, tras la creación del proyecto, se entra en un ciclo iterativo de codificación de infraestructura y despliegue de cambios.</p>
+</div>
+<div class="paragraph">
+<p>El proyecto se crea con el comando <code>pulumi new</code> y normalmente le pasaremos una plantilla como argumento. En la plantilla se configura la plataforma con la que vamos a trabajar (proveedor cloud, base de datos, &#8230;&#8203;) y el lenguaje de programación que vamos a utilizar para codificar la infraestructura. Esto lo veremos en el apartado <a href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto">Creación y configuración inicial del proyecto</a>.</p>
+</div>
+<div class="paragraph">
+<p>Los cambios introducidos en el ciclo de desarrollo con Pulumi pueden deberse a la creación de código para nuevos recursos, y modificación o eliminación del código de recursos creados previamente. La forma de llevar a cabo estos cambios siempre es con <code>pulumi up</code>. Tras confirmar la acción de despliegue, los cambios se trasladarán a la infraestructura y Pulumi guardará <em>el estado del despliegue</em>, que consiste en anotar cada uno de los recursos configurados.</p>
+</div>
+<div class="paragraph">
+<p>Cuando más adelante se introduzcan cambios en el código y se incluya nuevo código para nuevos recursos, y se modifique o elimine código de recursos creados previamente se comparará el último estado guardado del proyecto con el nuevo estado al que se llegaría tras aplicar los cambios. Tras confirmar la acción de despliegue, Pulumi sólo desplegaría los cambios, dejando intacto los recursos que no han sido modificados. En este sentido se dice que Pulumi es <code>idempotente</code> ya que no vuelve a crear un recurso que no ha sido modificado.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Si eliminamos un recurso del código y ejecutamos <code>pulumi up</code> se eliminará ese recurso de la infraestructura. Por tanto, no hay operaciones de eliminación para cada recurso. Simplemente se elimina su código del proyecto y se despliegan los cambios comn <code>pulumi up</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>La infraestructura creada se elimina con <code>pulumi destroy</code>. Es una operación peligrosa ya que elimina toda la infraestructura y si hay datos o configuraciones almacenadas en el despliegue se corre el riesgo de pérdida de datos.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack"><a class="anchor" href="#truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack"></a>4. Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>El caso de uso que estudiaremos parte de un proyecto OpenStack creado previamente. En dicho proyecto se configurarán mediante Pulumi los grupos de seguridad, se creará una instancia que se aprovisionará durante su inicio con Rancher y se finalizará asignándole una dirección IP flotante.</p>
 </div>
 <div class="sect2">
-<h3 id="truedescarga-de-las-credenciales-del-proyecto-openstack"><a class="anchor" href="#truedescarga-de-las-credenciales-del-proyecto-openstack"></a>3.1. Descarga de las credenciales del proyecto OpenStack</h3>
+<h3 id="truerecursos-del-paquete-pulumi-para-openstack"><a class="anchor" href="#truerecursos-del-paquete-pulumi-para-openstack"></a>4.1. Recursos del paquete Pulumi para OpenStack</h3>
+<div class="paragraph">
+<p>De acuerdo con la <a href="https://www.pulumi.com/docs/reference/pkg/openstack/">documentación del paquete Pulumi para OpenStack</a>, existen gran cantidad de módulos para la gestión de recursos OpenStacl con Pulumi, entre los que destacan almacenamiento de bloques para Cinder, instancias de cómputo para Nova, identidades para Keystone, imágenes para Glance, redes para Neutron y shares para Manila.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="truedescarga-de-las-credenciales-del-proyecto-openstack"><a class="anchor" href="#truedescarga-de-las-credenciales-del-proyecto-openstack"></a>4.2. Descarga de las credenciales del proyecto OpenStack</h3>
 <div class="paragraph">
 <p>Desde la interfaz gráfica Horizon de OpenStack seguiremos estos casos para la descarga de credenciales del usuario en el proyecto OpenStack a utilizar.</p>
 </div>
@@ -591,9 +635,9 @@ v3.7.0</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="truecreaci-n-y-configuraci-n-inicial-del-proyecto"><a class="anchor" href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto"></a>3.2. Creación y configuración inicial del proyecto</h3>
+<h3 id="truecreaci-n-y-configuraci-n-inicial-del-proyecto"><a class="anchor" href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto"></a>4.3. Creación y configuración inicial del proyecto</h3>
 <div class="paragraph">
-<p>Desde dentro de un directorio vacío creado para el proyecto crearemos el proyecto Pulumi con el comando <code>pulumi new</code>. Si no indicamos nada más, habrá que seleccionar el tipo de proyecto eligiendo tanto la plataforma como el lenguaje. Una forma más rápida es pasar el parámetro de configuración de la pareja plataforma-lenguaje directamente al crear el proyecto</p>
+<p>Desde dentro de un directorio vacío creado para el proyecto crearemos el proyecto Pulumi con el comando <code>pulumi new</code>. Si no indicamos nada más, habrá que seleccionar el tipo de proyecto eligiendo tanto la plataforma como el lenguaje. A esta combinación de tipo de proyecto (AWS, Azure, Google Cloud, Kubernetes, Linode, OpenStack) y lenguaje (Go, JavaScript, TypeScript, Python, C#) se le conoce como plantilla. Una forma más rápida es pasar el parámetro de configuración de la plantilla directamente al crear el proyecto</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -604,33 +648,324 @@ v3.7.0</code></pre>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Nuevo proyecto para OpenStack como provider y TypeScript como lenguaje.</td>
+<td>Nuevo proyecto usando la plantilla con OpenStack como provider y TypeScript como lenguaje.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>A continuación aceptaremos el nombre del proyecto, completaremos la descripción con <code>Configuración de MV OpenStack</code> y aceptaremos el nombre del stack.</p>
+<p>A continuación:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>aceptaremos el nombre del proyecto, cuyo valor predeterminado es el del directorio en el que se encuentra</p>
+</li>
+<li>
+<p>completaremos la descripción con <code>Configuración de MV OpenStack</code></p>
+</li>
+<li>
+<p>aceptaremos el nombre del stack (<code>dev</code>).</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Un stack es un concepto similar al de entorno de despliegue de aplicaciones. Podremos tener stacks diferentes para desarrollo, staging y producción.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>Por último instalaremos el paquete de OpenStack para Pulumi que instalará los componentes de OpenStack gestionables desde Pulumi.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash" data-lang="bash">$ npm install @pulumi/openstack</code></pre>
-</div>
+<p>Una vez aceptadas las opciones de creación del proyecto se instalarán las dependencias del proyecto y uno instantes después el proyecto estará listo para ejecutarse.</p>
 </div>
 <div class="paragraph">
 <p>Como resultado tendremos un proyecto con la estructura siguiente:</p>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code>├── .gitignore
+├── index.ts <i class="conum" data-value="1"></i><b>(1)</b>
+├── package.json <i class="conum" data-value="2"></i><b>(2)</b>
+├── Pulumi.yaml <i class="conum" data-value="3"></i><b>(3)</b>
+└── tsconfig.json</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Archivo con los recursos a desplegar. Incopora un ejemplo</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Archivo de dependencias. La dependencia de OpenStack aparece como instalada al haber creado el proyecto con una plantilla de OpenStack</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Configuración del nombre y descripción del proyecto y runtime de ejecución</td>
+</tr>
+</table>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Una instancia como ejemplo de recurso de OpenStack</div>
 <div class="paragraph">
-<p>$$$</p>
+<p>Tras crear el proyecto con la plantilla de OpenStack, Pulumi incluye un ejemplo de recurso en el archivo <code>index.ts</code>. Se trata de la creación de una instancia OpenStack.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">...
+import * as os from "@pulumi/openstack"; <i class="conum" data-value="1"></i><b>(1)</b>
+
+const instance = new os.compute.Instance("test", { <i class="conum" data-value="2"></i><b>(2)</b>
+	flavorName: "s1-2",
+	imageName: "Ubuntu 16.04",
+});
+...</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Importación del paquete de recursos de OpenStack</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Creación de una instancia</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Para la creación de la instancia:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Se usa <code>os</code> como alias dado al paquete OpenStack.</p>
+</li>
+<li>
+<p>Se usa el módulo <code>compute</code> y el recurso <code>Instance</code>.</p>
+</li>
+<li>
+<p>Se asigna un nombre (<code>test</code> en este caso)</p>
+</li>
+<li>
+<p>Se usa un objeto JSON para especificar los  <a href="https://www.pulumi.com/docs/reference/pkg/openstack/compute/instance/"> parámetros de configuración</a>.</p>
+</li>
+</ul>
 </div>
 </div>
 </div>
 </div>
-<div class="sect1">
-<h2 id="truescript-de-inicializaci-n-de-rancher"><a class="anchor" href="#truescript-de-inicializaci-n-de-rancher"></a>4. Script de inicialización de Rancher</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="trueconfiguraci-n-de-las-reglas-de-seguridad"><a class="anchor" href="#trueconfiguraci-n-de-las-reglas-de-seguridad"></a>4.4. Configuración de las reglas de seguridad</h3>
+<div class="paragraph">
+<p>Las reglas de seguridad configuran el cortafuegos del proyecto de OpenStack. Para el ejemplo que nos ocupa, Rancher necesita inicialmente que estén abiertos los puertos TCP 80 y 443 para el tráfico HTTP (HTTP y HTTPS). Para implementarlo podemos incluir estas dos reglas de seguridad en el grupo <code>default</code> del proyecto o crear un grupo de seguridad específico para estas dos reglas. Posteriormente, al configurar la instancia se le aplicaría el grupo de seguridad <code>default</code> o el grupo específico para las reglas HTTP.En este ejemplo optamos por crear un grupo de seguridad específico.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Crear grupos de seguridad específicos para grupos de reglas de reglas de seguriddad es más laborioso que ir incluyendo las reglas en el grupo <code>default</code>. Sin embargo, provoca que haya instancias que tengan abiertos puertos de forma innecesaria, lo que puede derivar en un problema de seguridad.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="truecreaci-n-de-un-grupo-de-seguridad"><a class="anchor" href="#truecreaci-n-de-un-grupo-de-seguridad"></a>4.4.1. Creación de un grupo de seguridad</h4>
+<div class="paragraph">
+<p>Los grupos de seguridad se crean con el recurso <code>SecGroup</code> del módulo <code>networking</code>. Basta con indicar un nombre para el grupo de seguridad y un JSON para las opciones. En nuestro caso incluiremos la descripción del grupo de seguridad.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">const webSecGroup = new os.networking.SecGroup("web", {
+	description: "Web security group"
+})</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Esto define un grupo de seguridad asignado a <code>webSecGroup</code> lo que nos permite manipularlo posteriormente, como para añadirle reglas de seguridad.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="truea-adir-reglas-de-seguridad"><a class="anchor" href="#truea-adir-reglas-de-seguridad"></a>4.4.2. Añadir reglas de seguridad</h4>
+<div class="paragraph">
+<p>Las reglas de seguridad se añaden a los grupos de seguridad creando un recurso <code>SecGroupRule</code> del módulo <code>networking</code>. Se trata de indicar un nombre para la reglas de seguridad y un JSON para las opciones. En nuestro caso incluiremos una descripción, dirección, si es IPv4 o IPv6, el puerto abierto (definido como un rango), el protocolo, las direcciones IP remotas a las que se les da acceso y el grupo de seguridad al que se asigna la regla creada</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">const web80 = new os.networking.SecGroupRule("web80", {
+	description: "HTTP",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 80,
+    portRangeMin: 80,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id, <i class="conum" data-value="1"></i><b>(1)</b>
+});
+
+const web443 = new os.networking.SecGroupRule("web443", {
+	description: "HTTPS",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 443,
+    portRangeMin: 443,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id, <i class="conum" data-value="2"></i><b>(2)</b>
+});</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Asignación de la regla a un grupo de seguridad.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Asignación de la regla a un grupo de seguridad.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="truedespliegue-de-la-configuraci-n-de-seguridad"><a class="anchor" href="#truedespliegue-de-la-configuraci-n-de-seguridad"></a>4.4.3. Despliegue de la configuración de seguridad</h4>
+<div class="paragraph">
+<p>La configuración de seguridad completa para un entorno con Rancher y Kubernetes residiendo en el mismo proyecto OpenStack incluye una gran variedad de grupos y reglas de seguridad. La documentación oficial de Rancher especifica la <a href="https://rancher.com/docs/rancher/v2.x/en/installation/requirements/ports/#ports-for-rancher-launched-kubernetes-clusters-using-node-pools">lista de puertos a abrir</a> para cada componente.</p>
+</div>
+<div class="paragraph">
+<p>Hacer una definición exhaustiva de todos los grupos y reglas de seguridad de un proyecto para producción está fuera del ámbito de este tutorial y nos limitaremos a incluir otro grupo de seguridad a modo de ejemplo para ver cómo configurar varios grupos de seguridad. Tomaremos como ejemplo la configuración de seguridad de los puertos 2379 y 2380 de la base de datos <code>etcd</code> que usa Kubernetes para el almacenamiento de la configuración.</p>
+</div>
+<div class="paragraph">
+<p>Finalmente, la configuración inicial de seguridad quedaría definida así en el archivo <code>index.ts</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">import * as os from "@pulumi/openstack";
+
+const cidr = '192.168.129.0/24' <i class="conum" data-value="1"></i><b>(1)</b>
+
+// Create security group <i class="conum" data-value="2"></i><b>(2)</b>
+const etcdSecGroup = new os.networking.SecGroup("etcd", {
+	description: "Kubernetes security group"
+})
+
+// Create security rule and assing to a security group <i class="conum" data-value="3"></i><b>(3)</b>
+const etcd2379 = new os.networking.SecGroupRule("etcd2379", {
+	description: "etcd",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 2379,
+    portRangeMin: 2379,
+    protocol: "tcp",
+    remoteIpPrefix: cidr, <i class="conum" data-value="4"></i><b>(4)</b>
+    securityGroupId: etcdSecGroup.id, <i class="conum" data-value="5"></i><b>(5)</b>
+});
+
+// Create security rule and assing to a security group
+const etcd2380 = new os.networking.SecGroupRule("etcd2380", {
+	description: "etcd",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 2380,
+    portRangeMin: 2380,
+    protocol: "tcp",
+    remoteIpPrefix: cidr,
+    securityGroupId: etcdSecGroup.id,
+});
+
+// Create web security group
+const webSecGroup = new os.networking.SecGroup("web", {
+	description: "Web security group"
+})
+
+// Create security rule and assing to a security group
+const web80 = new os.networking.SecGroupRule("web80", {
+	description: "HTTP",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 80,
+    portRangeMin: 80,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id,
+});
+
+// Create security rule and assing to a security group
+const web443 = new os.networking.SecGroupRule("web443", {
+	description: "HTTPS",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 443,
+    portRangeMin: 443,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id,
+});</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>CIDR para restringir el acceso remoto a instancias que se apliquen reglas de seguridad para ese CIDR</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Creación de un grupo de seguridad</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Creación de una regla para un grupo de seguridad</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Aplicación del CIDR a la regla de seguridad</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Asignación de la regla de seguridad a un grupo de seguridad</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Los cambios se desplegarían con <code>pulumi up</code> y seleccionando la opción <code>yes</code>. La opción <code>details</code> muestra los detalles de cada uno de los recursos a crear, modificar o eliminar en la infraestructura.</p>
+</div>
+<div class="paragraph">
+<p>La figura siguiente muestra el efecto del despliegue con los dos grupos de seguridad creados.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/grupos-de-seguridad.png" alt="grupos de seguridad.png">
+</div>
+</div>
+<div class="paragraph">
+<p>La figura siguiente ilustra las reglas de seguridad del grupo <code>web</code>. Para ese grupo se permitía el acceso a estos puertos desde cualquier dirección de Internet.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/reglas-de-seguridad-web.png" alt="reglas de seguridad web.png">
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="truescript-de-inicializaci-n-de-rancher"><a class="anchor" href="#truescript-de-inicializaci-n-de-rancher"></a>4.5. Script de inicialización de Rancher</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash" data-lang="bash">#!/bin/bash
@@ -716,9 +1051,30 @@ exit 0</code></pre>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="trueeliminaci-n-de-un-proyecto"><a class="anchor" href="#trueeliminaci-n-de-un-proyecto"></a>5. Eliminación de un proyecto</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The resources in the stack have been deleted, but the history and configuration associated with the stack are still maintained.
+If you want to remove the stack completely, run 'pulumi stack rm dev'.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-21 09:48:39 CEST
+Last updated 2021-07-22 07:19:55 CEST
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/styles/github.min.css">

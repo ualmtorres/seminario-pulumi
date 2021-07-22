@@ -79,9 +79,30 @@ $ pulumi version
 v3.7.0
 ----
 
+## Flujo de trabajo con Pulumi
+
+El flujo de trabajo habitual en Pulumi consiste en la creación del proyecto, codificación de la infraestuctura inicial, despliegue de cambios. Sin embargo, no se trata de un proceso secuencial, sino que en realidad, tras la creación del proyecto, se entra en un ciclo iterativo de codificación de infraestructura y despliegue de cambios.
+
+El proyecto se crea con el comando `pulumi new` y normalmente le pasaremos una plantilla como argumento. En la plantilla se configura la plataforma con la que vamos a trabajar (proveedor cloud, base de datos, ...) y el lenguaje de programación que vamos a utilizar para codificar la infraestructura. Esto lo veremos en el apartado <<Creación y configuración inicial del proyecto>>.
+
+Los cambios introducidos en el ciclo de desarrollo con Pulumi pueden deberse a la creación de código para nuevos recursos, y modificación o eliminación del código de recursos creados previamente. La forma de llevar a cabo estos cambios siempre es con `pulumi up`. Tras confirmar la acción de despliegue, los cambios se trasladarán a la infraestructura y Pulumi guardará _el estado del despliegue_, que consiste en anotar cada uno de los recursos configurados.
+
+Cuando más adelante se introduzcan cambios en el código y se incluya nuevo código para nuevos recursos, y se modifique o elimine código de recursos creados previamente se comparará el último estado guardado del proyecto con el nuevo estado al que se llegaría tras aplicar los cambios. Tras confirmar la acción de despliegue, Pulumi sólo desplegaría los cambios, dejando intacto los recursos que no han sido modificados. En este sentido se dice que Pulumi es `idempotente` ya que no vuelve a crear un recurso que no ha sido modificado.
+
+[NOTE]
+====
+Si eliminamos un recurso del código y ejecutamos `pulumi up` se eliminará ese recurso de la infraestructura. Por tanto, no hay operaciones de eliminación para cada recurso. Simplemente se elimina su código del proyecto y se despliegan los cambios comn `pulumi up`.
+====
+
+La infraestructura creada se elimina con `pulumi destroy`. Es una operación peligrosa ya que elimina toda la infraestructura y si hay datos o configuraciones almacenadas en el despliegue se corre el riesgo de pérdida de datos.
+
 ## Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack
 
-El caso de uso que estudiaremos parte de un proyecto OpenStack creado. En dicho proyecto se configurarán mediante Pulumi los grupos de seguridad, se creará una instancia que se aprovisionará durante su inicio con Rancher y se finalizará asignándole una dirección IP flotante.
+El caso de uso que estudiaremos parte de un proyecto OpenStack creado previamente. En dicho proyecto se configurarán mediante Pulumi los grupos de seguridad, se creará una instancia que se aprovisionará durante su inicio con Rancher y se finalizará asignándole una dirección IP flotante.
+
+### Recursos del paquete Pulumi para OpenStack
+
+De acuerdo con la https://www.pulumi.com/docs/reference/pkg/openstack/[documentación del paquete Pulumi para OpenStack], existen gran cantidad de módulos para la gestión de recursos OpenStacl con Pulumi, entre los que destacan almacenamiento de bloques para Cinder, instancias de cómputo para Nova, identidades para Keystone, imágenes para Glance, redes para Neutron y shares para Manila.
 
 ### Descarga de las credenciales del proyecto OpenStack
 
@@ -98,28 +119,210 @@ Para usuarios de Windows se recomienda tener instalado https://ubuntu.com/wsl[WS
 
 ### Creación y configuración inicial del proyecto
 
-Desde dentro de un directorio vacío creado para el proyecto crearemos el proyecto Pulumi con el comando `pulumi new`. Si no indicamos nada más, habrá que seleccionar el tipo de proyecto eligiendo tanto la plataforma como el lenguaje. Una forma más rápida es pasar el parámetro de configuración de la pareja plataforma-lenguaje directamente al crear el proyecto
+Desde dentro de un directorio vacío creado para el proyecto crearemos el proyecto Pulumi con el comando `pulumi new`. Si no indicamos nada más, habrá que seleccionar el tipo de proyecto eligiendo tanto la plataforma como el lenguaje. A esta combinación de tipo de proyecto (AWS, Azure, Google Cloud, Kubernetes, Linode, OpenStack) y lenguaje (Go, JavaScript, TypeScript, Python, C#) se le conoce como plantilla. Una forma más rápida es pasar el parámetro de configuración de la plantilla directamente al crear el proyecto
 
 [source,bash]
 ----
 $ pulumi new openstack-typescript <1>
 ----
-<1> Nuevo proyecto para OpenStack como provider y TypeScript como lenguaje.
+<1> Nuevo proyecto usando la plantilla con OpenStack como provider y TypeScript como lenguaje.
 
-A continuación aceptaremos el nombre del proyecto, completaremos la descripción con `Configuración de MV OpenStack` y aceptaremos el nombre del stack.
+A continuación:
 
-Por último instalaremos el paquete de OpenStack para Pulumi que instalará los componentes de OpenStack gestionables desde Pulumi.
+* aceptaremos el nombre del proyecto, cuyo valor predeterminado es el del directorio en el que se encuentra
+* completaremos la descripción con `Configuración de MV OpenStack`
+* aceptaremos el nombre del stack (`dev`).
 
-[source, bash]
-----
-$ npm install @pulumi/openstack
-----
+[NOTE]
+====
+Un stack es un concepto similar al de entorno de despliegue de aplicaciones. Podremos tener stacks diferentes para desarrollo, staging y producción.
+====
+
+Una vez aceptadas las opciones de creación del proyecto se instalarán las dependencias del proyecto y uno instantes después el proyecto estará listo para ejecutarse. 
 
 Como resultado tendremos un proyecto con la estructura siguiente:
 
-$$$
+[source,]
+----
+├── .gitignore
+├── index.ts <1>
+├── package.json <2>
+├── Pulumi.yaml <3>
+└── tsconfig.json
+----
+<1> Archivo con los recursos a desplegar. Incopora un ejemplo 
+<2> Archivo de dependencias. La dependencia de OpenStack aparece como instalada al haber creado el proyecto con una plantilla de OpenStack
+<3> Configuración del nombre y descripción del proyecto y runtime de ejecución
 
-## Script de inicialización de Rancher
+.Una instancia como ejemplo de recurso de OpenStack
+****
+Tras crear el proyecto con la plantilla de OpenStack, Pulumi incluye un ejemplo de recurso en el archivo `index.ts`. Se trata de la creación de una instancia OpenStack.
+
+[source, ts]
+----
+...
+import * as os from "@pulumi/openstack"; <1>
+
+const instance = new os.compute.Instance("test", { <2>
+	flavorName: "s1-2",
+	imageName: "Ubuntu 16.04",
+});
+...
+----
+<1> Importación del paquete de recursos de OpenStack
+<2> Creación de una instancia
+
+Para la creación de la instancia:
+
+* Se usa `os` como alias dado al paquete OpenStack.
+* Se usa el módulo `compute` y el recurso `Instance`. 
+* Se asigna un nombre (`test` en este caso)
+* Se usa un objeto JSON para especificar los  https://www.pulumi.com/docs/reference/pkg/openstack/compute/instance/[ parámetros de configuración]. 
+****
+
+### Configuración de las reglas de seguridad
+
+Las reglas de seguridad configuran el cortafuegos del proyecto de OpenStack. Para el ejemplo que nos ocupa, Rancher necesita inicialmente que estén abiertos los puertos TCP 80 y 443 para el tráfico HTTP (HTTP y HTTPS). Para implementarlo podemos incluir estas dos reglas de seguridad en el grupo `default` del proyecto o crear un grupo de seguridad específico para estas dos reglas. Posteriormente, al configurar la instancia se le aplicaría el grupo de seguridad `default` o el grupo específico para las reglas HTTP.En este ejemplo optamos por crear un grupo de seguridad específico.
+
+[IMPORTANT]
+====
+Crear grupos de seguridad específicos para grupos de reglas de reglas de seguriddad es más laborioso que ir incluyendo las reglas en el grupo `default`. Sin embargo, provoca que haya instancias que tengan abiertos puertos de forma innecesaria, lo que puede derivar en un problema de seguridad. 
+====
+
+#### Creación de un grupo de seguridad
+
+Los grupos de seguridad se crean con el recurso `SecGroup` del módulo `networking`. Basta con indicar un nombre para el grupo de seguridad y un JSON para las opciones. En nuestro caso incluiremos la descripción del grupo de seguridad.
+
+[source,ts]
+----
+const webSecGroup = new os.networking.SecGroup("web", {
+	description: "Web security group"
+})
+----
+
+Esto define un grupo de seguridad asignado a `webSecGroup` lo que nos permite manipularlo posteriormente, como para añadirle reglas de seguridad.
+
+#### Añadir reglas de seguridad
+
+Las reglas de seguridad se añaden a los grupos de seguridad creando un recurso `SecGroupRule` del módulo `networking`. Se trata de indicar un nombre para la reglas de seguridad y un JSON para las opciones. En nuestro caso incluiremos una descripción, dirección, si es IPv4 o IPv6, el puerto abierto (definido como un rango), el protocolo, las direcciones IP remotas a las que se les da acceso y el grupo de seguridad al que se asigna la regla creada
+
+[source,ts]
+----
+const web80 = new os.networking.SecGroupRule("web80", {
+	description: "HTTP",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 80,
+    portRangeMin: 80,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id, <1>
+});
+
+const web443 = new os.networking.SecGroupRule("web443", {
+	description: "HTTPS",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 443,
+    portRangeMin: 443,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id, <2>
+});
+----
+<1> Asignación de la regla a un grupo de seguridad.
+<2> Asignación de la regla a un grupo de seguridad.
+
+#### Despliegue de la configuración de seguridad
+
+La configuración de seguridad completa para un entorno con Rancher y Kubernetes residiendo en el mismo proyecto OpenStack incluye una gran variedad de grupos y reglas de seguridad. La documentación oficial de Rancher especifica la https://rancher.com/docs/rancher/v2.x/en/installation/requirements/ports/#ports-for-rancher-launched-kubernetes-clusters-using-node-pools[lista de puertos a abrir] para cada componente. 
+
+Hacer una definición exhaustiva de todos los grupos y reglas de seguridad de un proyecto para producción está fuera del ámbito de este tutorial y nos limitaremos a incluir otro grupo de seguridad a modo de ejemplo para ver cómo configurar varios grupos de seguridad. Tomaremos como ejemplo la configuración de seguridad de los puertos 2379 y 2380 de la base de datos `etcd` que usa Kubernetes para el almacenamiento de la configuración.
+
+Finalmente, la configuración inicial de seguridad quedaría definida así en el archivo `index.ts`.
+
+[source,ts]
+----
+import * as os from "@pulumi/openstack";
+
+const cidr = '192.168.129.0/24' <1>
+
+// Create security group <2>
+const etcdSecGroup = new os.networking.SecGroup("etcd", {
+	description: "Kubernetes security group"
+})
+
+// Create security rule and assing to a security group <3>
+const etcd2379 = new os.networking.SecGroupRule("etcd2379", {
+	description: "etcd",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 2379,
+    portRangeMin: 2379,
+    protocol: "tcp",
+    remoteIpPrefix: cidr, <4>
+    securityGroupId: etcdSecGroup.id, <5>
+});
+
+// Create security rule and assing to a security group
+const etcd2380 = new os.networking.SecGroupRule("etcd2380", {
+	description: "etcd",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 2380,
+    portRangeMin: 2380,
+    protocol: "tcp",
+    remoteIpPrefix: cidr,
+    securityGroupId: etcdSecGroup.id,
+});
+
+// Create web security group
+const webSecGroup = new os.networking.SecGroup("web", {
+	description: "Web security group"
+})
+
+// Create security rule and assing to a security group
+const web80 = new os.networking.SecGroupRule("web80", {
+	description: "HTTP",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 80,
+    portRangeMin: 80,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id,
+});
+
+// Create security rule and assing to a security group
+const web443 = new os.networking.SecGroupRule("web443", {
+	description: "HTTPS",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 443,
+    portRangeMin: 443,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id,
+});
+
+----
+<1> CIDR para restringir el acceso remoto a instancias que se apliquen reglas de seguridad para ese CIDR
+<2> Creación de un grupo de seguridad
+<3> Creación de una regla para un grupo de seguridad
+<4> Aplicación del CIDR a la regla de seguridad
+<5> Asignación de la regla de seguridad a un grupo de seguridad
+
+Los cambios se desplegarían con `pulumi up` y seleccionando la opción `yes`. La opción `details` muestra los detalles de cada uno de los recursos a crear, modificar o eliminar en la infraestructura.
+
+La figura siguiente muestra el efecto del despliegue con los dos grupos de seguridad creados.
+
+image::grupos-de-seguridad.png[]
+
+La figura siguiente ilustra las reglas de seguridad del grupo `web`. Para ese grupo se permitía el acceso a estos puertos desde cualquier dirección de Internet.
+
+image::reglas-de-seguridad-web.png[]
+
+### Script de inicialización de Rancher
 
 [source,bash]
 ----
@@ -202,3 +405,13 @@ curl -s 'https://127.0.0.1/v3/nodeDrivers/openstack?action=activate' \
 
 exit 0
 ----
+
+
+
+## Eliminación de un proyecto
+
+[NOTE]
+====
+The resources in the stack have been deleted, but the history and configuration associated with the stack are still maintained. 
+If you want to remove the stack completely, run 'pulumi stack rm dev'.
+====
