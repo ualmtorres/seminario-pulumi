@@ -322,16 +322,120 @@ La figura siguiente ilustra las reglas de seguridad del grupo `web`. Para ese gr
 
 image::reglas-de-seguridad-web.png[]
 
+### Creación de la instancia
+
+Tras definir los grupos de seguridad aplicables a la instancia continuamos ahora con la creación de un recurso de instancia en OpenStack, lo que nos permitirá tener una máquina virtual desplegada con código mediante Pulumi.
+
+Las instancias de OpenStack en Pulumi se crean con el recurso `Instance` del módulo `compute`. Basta con indicar un nombre para la instancia y un JSON para las opciones. En nuestro caso incluiremos la zona de disponibilidad, el nombre de la imagen tay como está definida en OpenStack, el nombre del _flavour_ o sabor a utilizar para crear la instancia, las redes a las que se conectará la instancia, el nombre del par de claves a inyectar en la instancia y los grupos de seguridad. Además, incluiremos un script de inicialización de la instancia en su creación (lo que se conoce como _user data_ en otros sistemas). En la sección <<Script de inicialización de Rancher>> se aportan los detalles de este script. Este script instalará Docker en la máquina virtual y ejecutará Rancher con Docker.
+
+El fragmento siguiente ilustra el código para la creación de una instancia en el archivo `index.ts`
+
+[source,ts]
+----
+import * as os from "@pulumi/openstack";
+
+const fs = require('fs') <1>
+...
+// Create an OpenStack resource (Compute Instance)
+const rancherInstance = new os.compute.Instance("rancher-sistemas-prod", {
+	availabilityZone: "stic-prod",
+	imageName: "Ubuntu 18.04 LTS",
+	flavorName: "large",
+	networks: [
+		{
+            name: "Sistemas-prod-net",
+        }
+	],
+	keyPair: "os-sistemas",
+	userData: fs.readFileSync('./rancher-setup.sh', 'utf8'), <2>
+	securityGroups: [etcdSecGroup.name, webSecGroup.name] <3>
+});
+...
+----
+<1> Paquete TypeScript para la interacción con archivos.
+<2> Carga del archivo que contiene el script de inicialización. **Importante usar utf8**.
+<3> Lista de grupos de seguridad a aplicar a la instancia.
+
+Los cambios se desplegarían con `pulumi up` y seleccionando la opción `yes`. La opción `details` muestra los detalles de cada uno de los recursos a crear, modificar o eliminar en la infraestructura.
+
+La figura siguiente muestra el efecto del despliegue con la instancia creada.
+
+image::instancia-creada.png[]
+
+### Asignación de IP flotante
+
+Para poder acceder a la instancia desde el exterior asignaremos una dirección IP flotante. En nuestro caso ya tenemos la dirección IP flotante adjudicada al proyecto y está registrada en un DNS. Por tanto, no será necesario crear la dirección IP flotante en el proyecto, sino que pasaremos directamente al paso de asignar la dirección IP flotante a la instancia. Después veremos cómo sería el script si hubiese que crear la dirección IP flotante.
+
+Las direcciones IP flotantes de OpenStack en Pulumi se asignan con el recurso `FloatingIpAssociate` del módulo `compute`. Basta con indicar un nombre para la asociación de la IP y un JSON para las opciones. En nuestro caso incluiremos la dirección IP flotante y el identificador de la instancia de Rancher.
+
+El fragmento siguiente ilustra el código para la creación de una instancia en el archivo `index.ts`
+
+[source,ts]
+----
+...
+const floatingIP = '192.168.129.1' <1>
+...
+// Associate a floating IP to the instance
+const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
+    floatingIp: floatingIP, <2>
+    instanceId: rancherInstance.id, <3>
+});
+...
+----
+<1> Dirección IP flotante a utilizar disponible previamente en el proyecto OpenStack
+<2> String con la dirección IP flotante
+<3> Identificador de la instancia
+
+Los cambios se desplegarían con `pulumi up` y seleccionando la opción `yes`. La opción `details` muestra los detalles de cada uno de los recursos a crear, modificar o eliminar en la infraestructura.
+
+La figura siguiente muestra el efecto del despliegue con la dirección IP flotante asignada a la instancia.
+
+image::ip-flotante-asignada.png[]
+
+La figura siguiente ilustra los detalles de la instancia con la dirección IP flotante asignada y los grupos de seguridad configurados.
+
+image::instancia-configurada.png[]
+
+.Creación de una dirección IP flotante
+****
+Si el proyecto no tiene reservada previamente la dirección IP flotante que vamos a usar, necesitamos crear una nueva.
+
+Las direcciones IP flotantes de OpenStack en Pulumi se crean con el recurso `FloatingIp` del módulo `networking`. Basta con indicar un nombre para la dirección IP flotante y un JSON para las opciones. En nuestro caso incluiremos el nombre del pool de direcciones IP flotantes de OpenStack (en nuestro caso es `ual-net`).
+
+[source,ts]
+----
+...
+const rancherFloatingIp = new openstack.networking.FloatingIp("rancherFloatingIP", {
+    pool: "ual-net",
+});
+...
+----
+
+A continuación asignaríamos la dirección IP flotante recién creada a la instancia creada. El proceso es similar al realizado anteriormente, pero sustituyendo la dirección IP en forma de cadena por la dirección IP flotante recién creada.
+
+[source,ts]
+----
+...
+// Associate a floating IP to the instance
+const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
+    floatingIp: rancherFloatingIp.address, <1>
+    instanceId: rancherInstance.id, 
+});
+...
+----
+<1> Dirección IP flotante creada.
+****
+
 ### Script de inicialización de Rancher
 
 [source,bash]
 ----
 #!/bin/bash
 
-RANCHERPASSWORD='yourpasswordhere'
-RANCHERSERVER='https://your.url.here.com'
+RANCHERPASSWORD='yourpasswordhere' <1>
+RANCHERSERVER='https://your.url.here.com' <2>
 
-echo "Instalando Docker"
+echo "Instalando Docker" <3>
 
 apt-get update
 apt-get install -y \
@@ -352,16 +456,16 @@ groupadd docker
 usermod -aG docker ubuntu
 systemctl enable docker
 
-echo "Obteniendo certificados"
+echo "Obteniendo certificados" 
 
 mkdir /home/ubuntu/rancherdata
-mkdir /home/ubuntu/certificados
+mkdir /home/ubuntu/certificados <4>
 
 wget -O /home/ubuntu/certificados/star_stic_ual_es.crt https://your.certificate.server.here.com/star_stic_ual_es_completa.crt
 wget -O /home/ubuntu/certificados/star_stic_ual_es.key https://your.certificate.server.here.com/star_stic_ual_es.key
 wget -O /home/ubuntu/certificados/DigiCertCA.crt https://your.certificate.server.here.com/DigiCertCA.crt
 
-docker run \
+docker run \ <5>
     --privileged -d \
     --restart=unless-stopped \
     -p 80:80 -p 443:443 \
@@ -371,24 +475,24 @@ docker run \
     -v /home/ubuntu/certificados/DigiCertCA.crt:/etc/rancher/ssl/cacerts.pem \
     --name rancher \
     rancher/rancher:v2.5.8 \
-    --features=unsupported-storage-drivers=true
+    --features=unsupported-storage-drivers=true <6>
 
 echo "Configurando Rancher"
 
-while ! curl -k https://localhost/ping; do sleep 3; done
+while ! curl -k https://localhost/ping; do sleep 3; done <7>
 
 # First Rancher Login
-LOGINRESPONSE=`curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"admin"}' --insecure`
-LOGINTOKEN=`echo $LOGINRESPONSE | jq -r .token`
+LOGINRESPONSE=`curl -s <8> 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"admin"}' --insecure`
+LOGINTOKEN=`echo $LOGINRESPONSE | jq -r .token` <9>
 
-# Change password
+# Change password <10>
 curl -s 'https://127.0.0.1/v3/users?action=changepassword' \
     -H 'content-type: application/json' \
     -H "Authorization: Bearer $LOGINTOKEN" \
     --data-binary '{"currentPassword":"admin","newPassword":"'$RANCHERPASSWORD'"}' \
     --insecure
 
-# Configure server-url
+# Configure server-url <11>
 curl -s 'https://127.0.0.1/v3/settings/server-url' \
     -H 'content-type: application/json' \
     -H "Authorization: Bearer $LOGINTOKEN" \
@@ -396,7 +500,7 @@ curl -s 'https://127.0.0.1/v3/settings/server-url' \
     --data-binary '{"name":"server-url","value":"'$RANCHERSERVER'"}' \
     --insecure
 
-# Activate OpenStack node driver
+# Activate OpenStack node driver <12>
 curl -s 'https://127.0.0.1/v3/nodeDrivers/openstack?action=activate' \
     -H 'content-type: application/json' \
     -H "Authorization: Bearer $LOGINTOKEN" \
@@ -405,8 +509,32 @@ curl -s 'https://127.0.0.1/v3/nodeDrivers/openstack?action=activate' \
 
 exit 0
 ----
+<1> Variable con la contraseña de administrador
+<2> Variable con nombre DNS a asignar a Rancher
+<3> Instalación de paquetes necesarios para Docker
+<4> Descarga de certificados
+<5> Iniciar un contenedor Rancher con los certificados descargados anteriormente
+<6> Activar los drivers de almacenamiento experimentales para permitir el uso de OpenStack Cinder como proveedor de almacenamiento
+<7> Esperar a que Rancher esté activo 
+<8> Usar la API de Rancher con las credenciales `admin/admin` y capturar la respuesta
+<9> Obtener el token de login a partir de la llamada anterior
+<10> Usar la API de Rancher con el token de login para configurar la nueva contraseña con la variable configurada al inicio del script
+<11> Usar la API de Rancher con el token de login para configurar el nombre DNS con la variable configurada al inicio del script
+<12> Usar la API de Rancher con el token de login para activar el driver de OpenStack
 
+La figura siguiente muestra Rancher disponible tras el inicio de la instancia
 
+image::rancher.png[]
+
+La figura siguiente muestra activada las características de drivers de almacenamiento no soportados para permitir el uso de volúmenes de OpenStack Cinder.
+
+image::driver-cinder.png[]
+
+La figura siguiente muestra activado el driver de OpenStack para la creación de nodos Kubernetes 
+
+image::openstack-node-driver.png[]
+
+## To-Do
 
 ## Eliminación de un proyecto
 

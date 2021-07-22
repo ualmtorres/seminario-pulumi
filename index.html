@@ -438,10 +438,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#truedescarga-de-las-credenciales-del-proyecto-openstack">4.2. Descarga de las credenciales del proyecto OpenStack</a></li>
 <li><a href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto">4.3. Creación y configuración inicial del proyecto</a></li>
 <li><a href="#trueconfiguraci-n-de-las-reglas-de-seguridad">4.4. Configuración de las reglas de seguridad</a></li>
-<li><a href="#truescript-de-inicializaci-n-de-rancher">4.5. Script de inicialización de Rancher</a></li>
+<li><a href="#truecreaci-n-de-la-instancia">4.5. Creación de la instancia</a></li>
+<li><a href="#trueasignaci-n-de-ip-flotante">4.6. Asignación de IP flotante</a></li>
+<li><a href="#truescript-de-inicializaci-n-de-rancher">4.7. Script de inicialización de Rancher</a></li>
 </ul>
 </li>
-<li><a href="#trueeliminaci-n-de-un-proyecto">5. Eliminación de un proyecto</a></li>
+<li><a href="#trueto-do">5. To-Do</a></li>
+<li><a href="#trueeliminaci-n-de-un-proyecto">6. Eliminación de un proyecto</a></li>
 </ul>
 </div>
 </div>
@@ -965,15 +968,179 @@ const web443 = new os.networking.SecGroupRule("web443", {
 </div>
 </div>
 <div class="sect2">
-<h3 id="truescript-de-inicializaci-n-de-rancher"><a class="anchor" href="#truescript-de-inicializaci-n-de-rancher"></a>4.5. Script de inicialización de Rancher</h3>
+<h3 id="truecreaci-n-de-la-instancia"><a class="anchor" href="#truecreaci-n-de-la-instancia"></a>4.5. Creación de la instancia</h3>
+<div class="paragraph">
+<p>Tras definir los grupos de seguridad aplicables a la instancia continuamos ahora con la creación de un recurso de instancia en OpenStack, lo que nos permitirá tener una máquina virtual desplegada con código mediante Pulumi.</p>
+</div>
+<div class="paragraph">
+<p>Las instancias de OpenStack en Pulumi se crean con el recurso <code>Instance</code> del módulo <code>compute</code>. Basta con indicar un nombre para la instancia y un JSON para las opciones. En nuestro caso incluiremos la zona de disponibilidad, el nombre de la imagen tay como está definida en OpenStack, el nombre del <em>flavour</em> o sabor a utilizar para crear la instancia, las redes a las que se conectará la instancia, el nombre del par de claves a inyectar en la instancia y los grupos de seguridad. Además, incluiremos un script de inicialización de la instancia en su creación (lo que se conoce como <em>user data</em> en otros sistemas). En la sección <a href="#truescript-de-inicializaci-n-de-rancher">Script de inicialización de Rancher</a> se aportan los detalles de este script. Este script instalará Docker en la máquina virtual y ejecutará Rancher con Docker.</p>
+</div>
+<div class="paragraph">
+<p>El fragmento siguiente ilustra el código para la creación de una instancia en el archivo <code>index.ts</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">import * as os from "@pulumi/openstack";
+
+const fs = require('fs') <i class="conum" data-value="1"></i><b>(1)</b>
+...
+// Create an OpenStack resource (Compute Instance)
+const rancherInstance = new os.compute.Instance("rancher-sistemas-prod", {
+	availabilityZone: "stic-prod",
+	imageName: "Ubuntu 18.04 LTS",
+	flavorName: "large",
+	networks: [
+		{
+            name: "Sistemas-prod-net",
+        }
+	],
+	keyPair: "os-sistemas",
+	userData: fs.readFileSync('./rancher-setup.sh', 'utf8'), <i class="conum" data-value="2"></i><b>(2)</b>
+	securityGroups: [etcdSecGroup.name, webSecGroup.name] <i class="conum" data-value="3"></i><b>(3)</b>
+});
+...</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Paquete TypeScript para la interacción con archivos.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Carga del archivo que contiene el script de inicialización. <strong>Importante usar utf8</strong>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Lista de grupos de seguridad a aplicar a la instancia.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Los cambios se desplegarían con <code>pulumi up</code> y seleccionando la opción <code>yes</code>. La opción <code>details</code> muestra los detalles de cada uno de los recursos a crear, modificar o eliminar en la infraestructura.</p>
+</div>
+<div class="paragraph">
+<p>La figura siguiente muestra el efecto del despliegue con la instancia creada.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/instancia-creada.png" alt="instancia creada.png">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="trueasignaci-n-de-ip-flotante"><a class="anchor" href="#trueasignaci-n-de-ip-flotante"></a>4.6. Asignación de IP flotante</h3>
+<div class="paragraph">
+<p>Para poder acceder a la instancia desde el exterior asignaremos una dirección IP flotante. En nuestro caso ya tenemos la dirección IP flotante adjudicada al proyecto y está registrada en un DNS. Por tanto, no será necesario crear la dirección IP flotante en el proyecto, sino que pasaremos directamente al paso de asignar la dirección IP flotante a la instancia. Después veremos cómo sería el script si hubiese que crear la dirección IP flotante.</p>
+</div>
+<div class="paragraph">
+<p>Las direcciones IP flotantes de OpenStack en Pulumi se asignan con el recurso <code>FloatingIpAssociate</code> del módulo <code>compute</code>. Basta con indicar un nombre para la asociación de la IP y un JSON para las opciones. En nuestro caso incluiremos la dirección IP flotante y el identificador de la instancia de Rancher.</p>
+</div>
+<div class="paragraph">
+<p>El fragmento siguiente ilustra el código para la creación de una instancia en el archivo <code>index.ts</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">...
+const floatingIP = '192.168.129.1' <i class="conum" data-value="1"></i><b>(1)</b>
+...
+// Associate a floating IP to the instance
+const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
+    floatingIp: floatingIP, <i class="conum" data-value="2"></i><b>(2)</b>
+    instanceId: rancherInstance.id, <i class="conum" data-value="3"></i><b>(3)</b>
+});
+...</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Dirección IP flotante a utilizar disponible previamente en el proyecto OpenStack</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>String con la dirección IP flotante</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Identificador de la instancia</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Los cambios se desplegarían con <code>pulumi up</code> y seleccionando la opción <code>yes</code>. La opción <code>details</code> muestra los detalles de cada uno de los recursos a crear, modificar o eliminar en la infraestructura.</p>
+</div>
+<div class="paragraph">
+<p>La figura siguiente muestra el efecto del despliegue con la dirección IP flotante asignada a la instancia.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/ip-flotante-asignada.png" alt="ip flotante asignada.png">
+</div>
+</div>
+<div class="paragraph">
+<p>La figura siguiente ilustra los detalles de la instancia con la dirección IP flotante asignada y los grupos de seguridad configurados.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/instancia-configurada.png" alt="instancia configurada.png">
+</div>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Creación de una dirección IP flotante</div>
+<div class="paragraph">
+<p>Si el proyecto no tiene reservada previamente la dirección IP flotante que vamos a usar, necesitamos crear una nueva.</p>
+</div>
+<div class="paragraph">
+<p>Las direcciones IP flotantes de OpenStack en Pulumi se crean con el recurso <code>FloatingIp</code> del módulo <code>networking</code>. Basta con indicar un nombre para la dirección IP flotante y un JSON para las opciones. En nuestro caso incluiremos el nombre del pool de direcciones IP flotantes de OpenStack (en nuestro caso es <code>ual-net</code>).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">...
+const rancherFloatingIp = new openstack.networking.FloatingIp("rancherFloatingIP", {
+    pool: "ual-net",
+});
+...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A continuación asignaríamos la dirección IP flotante recién creada a la instancia creada. El proceso es similar al realizado anteriormente, pero sustituyendo la dirección IP en forma de cadena por la dirección IP flotante recién creada.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">...
+// Associate a floating IP to the instance
+const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
+    floatingIp: rancherFloatingIp.address, <i class="conum" data-value="1"></i><b>(1)</b>
+    instanceId: rancherInstance.id,
+});
+...</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Dirección IP flotante creada.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="truescript-de-inicializaci-n-de-rancher"><a class="anchor" href="#truescript-de-inicializaci-n-de-rancher"></a>4.7. Script de inicialización de Rancher</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash" data-lang="bash">#!/bin/bash
 
-RANCHERPASSWORD='yourpasswordhere'
-RANCHERSERVER='https://your.url.here.com'
+RANCHERPASSWORD='yourpasswordhere' <i class="conum" data-value="1"></i><b>(1)</b>
+RANCHERSERVER='https://your.url.here.com' <i class="conum" data-value="2"></i><b>(2)</b>
 
-echo "Instalando Docker"
+echo "Instalando Docker" <i class="conum" data-value="3"></i><b>(3)</b>
 
 apt-get update
 apt-get install -y \
@@ -997,13 +1164,13 @@ systemctl enable docker
 echo "Obteniendo certificados"
 
 mkdir /home/ubuntu/rancherdata
-mkdir /home/ubuntu/certificados
+mkdir /home/ubuntu/certificados <i class="conum" data-value="4"></i><b>(4)</b>
 
 wget -O /home/ubuntu/certificados/star_stic_ual_es.crt https://your.certificate.server.here.com/star_stic_ual_es_completa.crt
 wget -O /home/ubuntu/certificados/star_stic_ual_es.key https://your.certificate.server.here.com/star_stic_ual_es.key
 wget -O /home/ubuntu/certificados/DigiCertCA.crt https://your.certificate.server.here.com/DigiCertCA.crt
 
-docker run \
+docker run \ <i class="conum" data-value="5"></i><b>(5)</b>
     --privileged -d \
     --restart=unless-stopped \
     -p 80:80 -p 443:443 \
@@ -1013,24 +1180,24 @@ docker run \
     -v /home/ubuntu/certificados/DigiCertCA.crt:/etc/rancher/ssl/cacerts.pem \
     --name rancher \
     rancher/rancher:v2.5.8 \
-    --features=unsupported-storage-drivers=true
+    --features=unsupported-storage-drivers=true <i class="conum" data-value="6"></i><b>(6)</b>
 
 echo "Configurando Rancher"
 
-while ! curl -k https://localhost/ping; do sleep 3; done
+while ! curl -k https://localhost/ping; do sleep 3; done <i class="conum" data-value="7"></i><b>(7)</b>
 
 # First Rancher Login
-LOGINRESPONSE=`curl -s 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"admin"}' --insecure`
-LOGINTOKEN=`echo $LOGINRESPONSE | jq -r .token`
+LOGINRESPONSE=`curl -s &lt;8&gt; 'https://127.0.0.1/v3-public/localProviders/local?action=login' -H 'content-type: application/json' --data-binary '{"username":"admin","password":"admin"}' --insecure`
+LOGINTOKEN=`echo $LOGINRESPONSE | jq -r .token` <i class="conum" data-value="9"></i><b>(9)</b>
 
-# Change password
+# Change password <i class="conum" data-value="10"></i><b>(10)</b>
 curl -s 'https://127.0.0.1/v3/users?action=changepassword' \
     -H 'content-type: application/json' \
     -H "Authorization: Bearer $LOGINTOKEN" \
     --data-binary '{"currentPassword":"admin","newPassword":"'$RANCHERPASSWORD'"}' \
     --insecure
 
-# Configure server-url
+# Configure server-url <i class="conum" data-value="11"></i><b>(11)</b>
 curl -s 'https://127.0.0.1/v3/settings/server-url' \
     -H 'content-type: application/json' \
     -H "Authorization: Bearer $LOGINTOKEN" \
@@ -1038,7 +1205,7 @@ curl -s 'https://127.0.0.1/v3/settings/server-url' \
     --data-binary '{"name":"server-url","value":"'$RANCHERSERVER'"}' \
     --insecure
 
-# Activate OpenStack node driver
+# Activate OpenStack node driver <i class="conum" data-value="12"></i><b>(12)</b>
 curl -s 'https://127.0.0.1/v3/nodeDrivers/openstack?action=activate' \
     -H 'content-type: application/json' \
     -H "Authorization: Bearer $LOGINTOKEN" \
@@ -1048,11 +1215,93 @@ curl -s 'https://127.0.0.1/v3/nodeDrivers/openstack?action=activate' \
 exit 0</code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Variable con la contraseña de administrador</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Variable con nombre DNS a asignar a Rancher</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Instalación de paquetes necesarios para Docker</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Descarga de certificados</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Iniciar un contenedor Rancher con los certificados descargados anteriormente</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Activar los drivers de almacenamiento experimentales para permitir el uso de OpenStack Cinder como proveedor de almacenamiento</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>Esperar a que Rancher esté activo</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>Usar la API de Rancher con las credenciales <code>admin/admin</code> y capturar la respuesta</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>Obtener el token de login a partir de la llamada anterior</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="10"></i><b>10</b></td>
+<td>Usar la API de Rancher con el token de login para configurar la nueva contraseña con la variable configurada al inicio del script</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="11"></i><b>11</b></td>
+<td>Usar la API de Rancher con el token de login para configurar el nombre DNS con la variable configurada al inicio del script</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="12"></i><b>12</b></td>
+<td>Usar la API de Rancher con el token de login para activar el driver de OpenStack</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>La figura siguiente muestra Rancher disponible tras el inicio de la instancia</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/rancher.png" alt="rancher.png">
+</div>
+</div>
+<div class="paragraph">
+<p>La figura siguiente muestra activada las características de drivers de almacenamiento no soportados para permitir el uso de volúmenes de OpenStack Cinder.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/driver-cinder.png" alt="driver cinder.png">
+</div>
+</div>
+<div class="paragraph">
+<p>La figura siguiente muestra activado el driver de OpenStack para la creación de nodos Kubernetes</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/openstack-node-driver.png" alt="openstack node driver.png">
+</div>
+</div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="trueeliminaci-n-de-un-proyecto"><a class="anchor" href="#trueeliminaci-n-de-un-proyecto"></a>5. Eliminación de un proyecto</h2>
+<h2 id="trueto-do"><a class="anchor" href="#trueto-do"></a>5. To-Do</h2>
+<div class="sectionbody">
+
+</div>
+</div>
+<div class="sect1">
+<h2 id="trueeliminaci-n-de-un-proyecto"><a class="anchor" href="#trueeliminaci-n-de-un-proyecto"></a>6. Eliminación de un proyecto</h2>
 <div class="sectionbody">
 <div class="admonitionblock note">
 <table>
@@ -1074,7 +1323,7 @@ If you want to remove the stack completely, run 'pulumi stack rm dev'.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-22 07:19:55 CEST
+Last updated 2021-07-22 18:55:27 CEST
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/styles/github.min.css">
