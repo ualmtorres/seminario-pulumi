@@ -314,6 +314,11 @@ const web443 = new os.networking.SecGroupRule("web443", {
 
 Los cambios se desplegarían con `pulumi up` y seleccionando la opción `yes`. La opción `details` muestra los detalles de cada uno de los recursos a crear, modificar o eliminar en la infraestructura.
 
+[NOTE]
+====
+Si al realizar el despliegue nos aparece el error `One of 'auth_url' or 'cloud' must be specified` se debe a que no se han cargado las credenciales de OpenStack. Consultar el apartado <<Descarga de las credenciales del proyecto OpenStack>>.
+====
+
 La figura siguiente muestra el efecto del despliegue con los dos grupos de seguridad creados.
 
 image::grupos-de-seguridad.png[]
@@ -533,6 +538,233 @@ image::driver-cinder.png[]
 La figura siguiente muestra activado el driver de OpenStack para la creación de nodos Kubernetes 
 
 image::openstack-node-driver.png[]
+
+### Reorganización del código
+
+Hemos ido creando recursos poco a poco, comenzando con los grupos de seguridad para centrarnos posteriormente en la creación de la instancia. Actualmente tenemos toda la configuración de la infraestructura en un único archivo `index.ts`. A medida que incorporemos nuevos grupos de seguridad, nuevas reglas, nuevas instancias, el código se hará inmanejable. Actualmente, el archivo `index.js` luce de esta manera.
+
+.`index.ts` con todos los recursos juntos
+====
+[source,ts]
+----
+import * as os from "@pulumi/openstack";
+import * as sg from './security-groups'
+
+const cidr = '192.168.129.0/24'
+const floatingIP = '192.168.129.1'
+const fs = require('fs')
+
+// Create security group
+const etcdSecGroup = new os.networking.SecGroup("etcd", {
+	description: "Kubernetes security group"
+})
+
+// Create security rule and assing to a security group
+const etcd2379 = new os.networking.SecGroupRule("etcd2379", {
+	description: "etcd",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 2379,
+    portRangeMin: 2379,
+    protocol: "tcp",
+    remoteIpPrefix: cidr,
+    securityGroupId: etcdSecGroup.id,
+});
+
+// Create security rule and assing to a security group
+const etcd2380 = new os.networking.SecGroupRule("etcd2380", {
+	description: "etcd",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 2380,
+    portRangeMin: 2380,
+    protocol: "tcp",
+    remoteIpPrefix: cidr,
+    securityGroupId: etcdSecGroup.id,
+});
+
+// Create web security group
+const webSecGroup = new os.networking.SecGroup("web", {
+	description: "Web security group"
+})
+
+// Create security rule and assing to a security group
+const web80 = new os.networking.SecGroupRule("web80", {
+	description: "HTTP",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 80,
+    portRangeMin: 80,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id,
+});
+
+// Create security rule and assing to a security group
+const web443 = new os.networking.SecGroupRule("web443", {
+	description: "HTTPS",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 443,
+    portRangeMin: 443,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id,
+});
+
+// Create an OpenStack resource (Compute Instance)
+const rancherInstance = new os.compute.Instance("rancher-sistemas-prod", {
+	availabilityZone: "stic-prod",
+	imageName: "Ubuntu 18.04 LTS",
+	flavorName: "large",
+	networks: [
+		{
+            name: "Sistemas-prod-net",
+        }
+	],
+	keyPair: "os-sistemas",
+	userData: fs.readFileSync('./rancher-setup.sh', 'utf8'),
+	securityGroups: [etcdSecGroup.name, webSecGroup.name]
+});
+
+// Associate a floating IP to the instance
+const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
+    floatingIp: floatingIP,
+    instanceId: rancherInstance.id,
+});
+
+----
+====
+
+La refactorización que se propone consiste en:
+
+* Crear un archivo de variables (`values.ts`) en el que se configuran los valores de las variables a utilizar. En este ejemplo configuraremos el CIDR para permitir el acceso desde direcciones IP remotas y la dirección IP flotante que tenemos reservada para Rancher.
+* Separar la configuración de los grupos y reglas de seguridad en un archivo aparte (`security-groups.ts`)
+* Mantener en `index.ts` sólo las configuración de la instancia de Rancher y la asignación a la IP flotante.
+
+A continuación se muestra el código de cada uno de estos archivos tras la refactorización.
+
+.`values.ts` con los valores de configuración del despliegue
+====
+[source,ts]
+----
+const cidr = '192.168.129.0/24'
+const floatingIP = '192.168.129.1'
+
+export {cidr, floatingIP} <1>
+----
+<1> Constantes exportadas para ser reutilizadas
+====
+
+.`security-groups.ts` con la configuración de los grupos y reglas de seguridad del despliegue
+====
+[source,ts]
+----
+import * as os from "@pulumi/openstack";
+import * as values from './values' <1>
+
+// Create security group
+const etcdSecGroup = new os.networking.SecGroup("etcd", {
+	description: "Kubernetes security group"
+})
+
+// Create security rule and assing to a security group
+const etcd2379 = new os.networking.SecGroupRule("etcd2379", {
+	description: "etcd",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 2379,
+    portRangeMin: 2379,
+    protocol: "tcp",
+    remoteIpPrefix: values.cidr, <2>
+    securityGroupId: etcdSecGroup.id,
+});
+
+// Create security rule and assing to a security group
+const etcd2380 = new os.networking.SecGroupRule("etcd2380", {
+	description: "etcd",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 2380,
+    portRangeMin: 2380,
+    protocol: "tcp",
+    remoteIpPrefix: values.cidr, 
+    securityGroupId: etcdSecGroup.id,
+});
+
+// Create web security group
+const webSecGroup = new os.networking.SecGroup("web", {
+	description: "Web security group"
+})
+
+// Create security rule and assing to a security group
+const web80 = new os.networking.SecGroupRule("web80", {
+	description: "HTTP",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 80,
+    portRangeMin: 80,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id,
+});
+
+// Create security rule and assing to a security group
+const web443 = new os.networking.SecGroupRule("web443", {
+	description: "HTTPS",
+    direction: "ingress",
+    ethertype: "IPv4",
+    portRangeMax: 443,
+    portRangeMin: 443,
+    protocol: "tcp",
+    remoteIpPrefix: '0.0.0.0/0',
+    securityGroupId: webSecGroup.id,
+});
+
+export {webSecGroup, etcdSecGroup} <3>
+----
+<1> Importación del archivo de parámetros y configuración del prefijo `values` para usar los objetos que ha exportado
+<2> Uso de los parámetros del archivo de parámetros
+<3> Se exportan los grupos de seguridad para poder ser reutilizadas
+====
+
+.`index.ts` con la configuración de la instancia del despliegue con la asignación de una IP flotante asignada previamente al proyecto
+====
+[source,ts]
+----
+import * as os from "@pulumi/openstack";
+import * as values from './values' <1>
+import * as sg from './security-groups' <2>
+
+const fs = require('fs')
+
+// Create an OpenStack resource (Compute Instance)
+const rancherInstance = new os.compute.Instance("rancher-sistemas-prod", {
+	availabilityZone: "stic-prod",
+	imageName: "Ubuntu 18.04 LTS",
+	flavorName: "large",
+	networks: [
+		{
+            name: "Sistemas-prod-net",
+        }
+	],
+	keyPair: "os-sistemas",
+	userData: fs.readFileSync('./rancher-setup.sh', 'utf8'),
+	securityGroups: [sg.etcdSecGroup.name, sg.webSecGroup.name] <3>
+});
+
+// Associate a floating IP to the instance
+const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
+    floatingIp: values.floatingIP, <4>
+    instanceId: rancherInstance.id,
+});
+
+----
+<1> Importación del archivo de parámetros y configuración del prefijo `values` para usar los objetos que ha exportado
+<2> Importación del archivo de grupos de seguridad y configuración del prefijo `sg (security-groups)` para usar los objetos que ha exportado
+<3> Uso de los grupos de seguridad del archivo de grupos de seguridad
+<4> Uso de los parámetros del archivo de parámetros
+====
 
 ## To-Do
 
