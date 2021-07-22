@@ -27,15 +27,16 @@ image::logocloudstic.png[]
 ////
 COLOCA A CONTINUACION EL RESUMEN
 ////
-Los produtos habituales para la Infraestructura como código, como Terraform, Ansible, Chef, Puppet, y demás, suelen contar con su propia sintaxis, lo que dificulta en cierta medida su uso. Pulumi permite la creación de la infraestructura usando lenguajes de programación populares, como TypeScript, JavaScript, Python, Go o C#. De esta forma podemos usar nuestro lenguaje habitual para la creación de la infraestructura de forma sencilla, sin tener que pasar a otro lenguaje y beneficiándonos del manejo de variables y construcciones de programación habituales como los bucles y condiciones, aspectos básicos pero que no son demasiado sencillos de usar en el resto de productos.
+Los produtos habituales para la Infraestructura como código, como Terraform, Ansible, Chef, Puppet, y demás, suelen contar con su propia sintaxis, lo que dificulta en cierta medida su uso. Pulumi permite la creación de la infraestructura usando lenguajes de programación populares, como TypeScript, JavaScript, Python, Go o C#. De esta forma podemos usar nuestro lenguaje habitual o preferido para la creación de la infraestructura de forma sencilla, sin tener que pasar a otro lenguaje y beneficiándonos del manejo de variables y construcciones de programación habituales, como los bucles y condiciones, aspectos básicos pero que no son demasiado sencillos de usar en el resto de productos.
 
 ////
 COLOCA A CONTINUACION LOS OBJETIVOS
 ////
 .Objetivos
-* Aprender a hacer despliegues de proyectos sencillos.
-* Realizar cambios sobre la infraestructura.
+* Aprender a desplegar infraestuctura mediante código.
+* Realizar cambios sobre la infraestructura a través del código.
 * Gestionar errores de despliegues corruptos.
+* Organizar el código despliegue
 
 [TIP]
 ====
@@ -47,7 +48,7 @@ COLOCA A CONTINUACION LOS OBJETIVOS
 
 ## Introducción
 
-La Infraestructura como código (IaC, Infrastructure as Code) permite la definición y mantenimiento de la infraestructura mediante código. Esto permite la automatización de la creación de la infraestructura en lugar de hacerlo manualmente. Se trata de un proceso declarativo en el que mediante una serie de archivos se especifica de forma declarativa la infraestructura y la configuración que se necesita (p.e. un entorno de backend con un volumen de almacenamiento, una máquina virtual con MySQL instalado y conectada al volumen creado, una máquina virtual con un framework instalado como Express, la configuración de red y de grupos de seguridad, ....). De esta forma se evita tener que preparar manualmente las máquinas virtuales, sistemas operativos, almacenamiento y configuración, obteniéndose en su lugar la definición de un entorno que garantiza ser replicable, documentando las especificaciones y evitando la realización de cambios sobre marcha y que no queden documentados. Con IaC, los cambios se hacen sobre el código y se aplican ejecutándola, en lugar de hacerlos en caliente mediante comandos sobre la infraestructura. Además, la práctica de control de versiones, como cualquier otro desarrollo software, permitirá llevar un control de cada uno de los cambios introducidos en la configuración de la infraestructura. 
+La Infraestructura como código (IaC, Infrastructure as Code) permite la definición y mantenimiento de la infraestructura mediante código. Esto permite la automatización de la creación de la infraestructura en lugar de hacerlo manualmente. Se trata de un proceso declarativo en el que mediante una serie de archivos se especifica de forma declarativa la infraestructura y la configuración que se necesita (p.e. un entorno de backend formado por un volumen de almacenamiento, una máquina virtual con MySQL instalado y conectada al volumen creado, una máquina virtual con un framework instalado como Express, la configuración de red y de grupos de seguridad, ....). De esta forma se evita tener que preparar manualmente las máquinas virtuales, sistemas operativos, almacenamiento y configuración, obteniéndose en su lugar la definición de un entorno que garantiza ser repetible, replicable, documentando las especificaciones y evitando la práctica de realización de cambios sobre la marcha y que no queden documentados. Con IaC, los cambios se hacen sobre el código y se aplican ejecutando el código desarrollado, en lugar de hacerlos en caliente mediante comandos sobre la infraestructura. Además, la combinación de IaC con la práctica de control de versiones permitirá, como en cualquier otro desarrollo software, llevar un control de cada uno de los cambios introducidos en la configuración de la infraestructura. 
 
 Entre los productos más populares de IaC se encuentran Terraform, Ansible, Chef, Puppet, ... En estas propuestas, la infraestructura se especifica de formas muy variadas, como en https://ualmtorres.github.io/CursoAnsible/tutorial/#trueinstalaci-n-de-paquetes[formato YAML] en el caso de Ansible, o en su propio lenguaje DSL (Domain Specific Language) como el https://github.com/ualmtorres/terraform-examples/blob/master/GCP/05-instancia-aprovisionada/main.tf[HCL] (Hashicorp Configuration Language) de Terraform y el https://puppet.com/docs/puppet/7/lang_visual_index.html#lang_examples_resource-resource-declaration[Puppet Language] de Puppet, pasando por Chef, que usa https://www.tutorialspoint.com/chef/chef_testing_cookbooks.htm[Ruby como sintaxis] para la definición de la infraestructura. 
 
@@ -56,11 +57,11 @@ Entre los productos más populares de IaC se encuentran Terraform, Ansible, Chef
 En estos enlaces puedes consultar otros tutoriales sobre https://ualmtorres.github.io/SeminarioTerraform/[Terraform] y https://ualmtorres.github.io/CursoAnsible/tutorial/[Ansible].
 ====
 
-En este contexto surge https://www.pulumi.com/[Pulumi], un nuevo producto de IaC que se diferencia del resto en que usa lenguajes de programación convencionales, como TypeScript, JavaScript, Python, Go o C#. Esto lo hace especialmente interesante, ya que no se tendrá que aprender un lenguaje extra para el manejo de infraestructura cloud y se facilita el uso de variables y construcciones de programación como bucles y condiciones.
+En este contexto surge https://www.pulumi.com/[Pulumi], un nuevo producto de IaC que se diferencia del resto en que usa lenguajes de programación convencionales para la configuración de la infraestructura, como TypeScript, JavaScript, Python, Go o C#. Esto lo hace especialmente interesante, ya que no se tendrá que aprender un lenguaje extra para el manejo de infraestructura cloud y se facilita el uso de variables y construcciones de programación como bucles y condiciones.
 
-Pulumi ofrece soporte para lo principales proveedores cloud, como Amazon, Google Cloud, Microsoft Azure, Digital Ocean, Linode, OpenStack, vSphere, y demás, así como para Kubernetes, proveedores de infraestructura, bases de datos, monitorización y sistemas de control de versiones.
+Pulumi ofrece soporte para los principales proveedores cloud, como Amazon, Google Cloud, Microsoft Azure, Digital Ocean, Linode, OpenStack, vSphere, y demás, así como para Kubernetes, proveedores de infraestructura, bases de datos, monitorización y sistemas de control de versiones.
 
-En este tutorial nos centraremos en la creación de un cluster de Kubernetes gestionado con Rancher y usando OpenStack como proveedor de infraestructura. Usaremos TypeScript como lenguaje de desarrollo
+En este tutorial nos centraremos en la creación de un cluster de Kubernetes gestionado con Rancher y usando OpenStack como proveedor de infraestructura. Usaremos TypeScript como lenguaje de desarrollo.
 
 
 ## Configuración de Pulumi
@@ -81,20 +82,20 @@ v3.7.0
 
 ## Flujo de trabajo con Pulumi
 
-El flujo de trabajo habitual en Pulumi consiste en la creación del proyecto, codificación de la infraestuctura inicial, despliegue de cambios. Sin embargo, no se trata de un proceso secuencial, sino que en realidad, tras la creación del proyecto, se entra en un ciclo iterativo de codificación de infraestructura y despliegue de cambios.
+El flujo de trabajo habitual en Pulumi consiste en la creación del proyecto, codificación de la infraestuctura inicial, despliegue de cambios. Sin embargo, no se trata de un proceso secuencial, sino que en realidad, tras la creación del proyecto se entra en un ciclo iterativo de codificación de infraestructura y despliegue de cambios.
 
 El proyecto se crea con el comando `pulumi new` y normalmente le pasaremos una plantilla como argumento. En la plantilla se configura la plataforma con la que vamos a trabajar (proveedor cloud, base de datos, ...) y el lenguaje de programación que vamos a utilizar para codificar la infraestructura. Esto lo veremos en el apartado <<Creación y configuración inicial del proyecto>>.
 
-Los cambios introducidos en el ciclo de desarrollo con Pulumi pueden deberse a la creación de código para nuevos recursos, y modificación o eliminación del código de recursos creados previamente. La forma de llevar a cabo estos cambios siempre es con `pulumi up`. Tras confirmar la acción de despliegue, los cambios se trasladarán a la infraestructura y Pulumi guardará _el estado del despliegue_, que consiste en anotar cada uno de los recursos configurados.
+Los cambios introducidos en el ciclo de desarrollo con Pulumi pueden deberse bien a la creación de código para nuevos recursos, bien a la modificación o eliminación del código de recursos creados previamente. La forma de llevar a cabo estos cambios siempre es con `pulumi up`. Tras confirmar la acción de despliegue, los cambios se trasladarán a la infraestructura y Pulumi guardará _el estado del despliegue_, que consiste en anotar cada uno de los recursos configurados.
 
-Cuando más adelante se introduzcan cambios en el código y se incluya nuevo código para nuevos recursos, y se modifique o elimine código de recursos creados previamente se comparará el último estado guardado del proyecto con el nuevo estado al que se llegaría tras aplicar los cambios. Tras confirmar la acción de despliegue, Pulumi sólo desplegaría los cambios, dejando intacto los recursos que no han sido modificados. En este sentido se dice que Pulumi es `idempotente` ya que no vuelve a crear un recurso que no ha sido modificado.
+Cuando más adelante se introduzcan cambios en el código y se incluya nuevo código para nuevos recursos, o se modifique o elimine código de recursos creados previamente, se comparará el último estado guardado del proyecto con el nuevo estado al que se llegaría tras aplicar los cambios. Tras confirmar la acción de despliegue, Pulumi sólo desplegaría los recursos relativos a los cambios realizados, dejando intactos los recursos que no han sido modificados. En este sentido se dice que Pulumi es _idempotente_ ya que no vuelve a crear un recurso que no ha sido modificado. Tras un despliegue exitoso, Pulumi vuelve a guardar el estado del despliegue realizado.
 
 [NOTE]
 ====
-Si eliminamos un recurso del código y ejecutamos `pulumi up` se eliminará ese recurso de la infraestructura. Por tanto, no hay operaciones de eliminación para cada recurso. Simplemente se elimina su código del proyecto y se despliegan los cambios comn `pulumi up`.
+Si eliminamos un recurso del código y ejecutamos `pulumi up` se eliminará ese recurso de la infraestructura. Por tanto, no hay operaciones de eliminación propiamente para cada recurso. Simplemente se elimina su código del proyecto y se despliegan los cambios comn `pulumi up`.
 ====
 
-La infraestructura creada se elimina con `pulumi destroy`. Es una operación peligrosa ya que elimina toda la infraestructura y si hay datos o configuraciones almacenadas en el despliegue se corre el riesgo de pérdida de datos.
+La infraestructura creada se elimina con `pulumi destroy`. Es una operación peligrosa ya que elimina toda la infraestructura. **Si hay datos o configuraciones almacenadas en el despliegue se corre el riesgo de pérdida de datos.**
 
 ## Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack
 
@@ -102,7 +103,7 @@ El caso de uso que estudiaremos parte de un proyecto OpenStack creado previament
 
 ### Recursos del paquete Pulumi para OpenStack
 
-De acuerdo con la https://www.pulumi.com/docs/reference/pkg/openstack/[documentación del paquete Pulumi para OpenStack], existen gran cantidad de módulos para la gestión de recursos OpenStacl con Pulumi, entre los que destacan almacenamiento de bloques para Cinder, instancias de cómputo para Nova, identidades para Keystone, imágenes para Glance, redes para Neutron y shares para Manila.
+De acuerdo con la https://www.pulumi.com/docs/reference/pkg/openstack/[documentación del paquete Pulumi para OpenStack], existen gran cantidad de módulos para la gestión de recursos OpenStack con Pulumi, entre los que destacan almacenamiento de bloques para Cinder, instancias de cómputo para Nova, identidades para Keystone, imágenes para Glance, redes para Neutron y shares para Manila.
 
 ### Descarga de las credenciales del proyecto OpenStack
 
@@ -129,16 +130,16 @@ $ pulumi new openstack-typescript <1>
 
 A continuación:
 
-* aceptaremos el nombre del proyecto, cuyo valor predeterminado es el del directorio en el que se encuentra
-* completaremos la descripción con `Configuración de MV OpenStack`
-* aceptaremos el nombre del stack (`dev`).
+* Aceptaremos el nombre del proyecto, cuyo valor predeterminado es el del directorio en el que se encuentra.
+* Completaremos la descripción con `Configuración de MV OpenStack`.
+* Aceptaremos el nombre del stack (`dev`).
 
 [NOTE]
 ====
 Un stack es un concepto similar al de entorno de despliegue de aplicaciones. Podremos tener stacks diferentes para desarrollo, staging y producción.
 ====
 
-Una vez aceptadas las opciones de creación del proyecto se instalarán las dependencias del proyecto y uno instantes después el proyecto estará listo para ejecutarse. 
+Una vez aceptadas las opciones de creación del proyecto se instalarán las dependencias del proyecto y unos instantes después el proyecto estará listo para ejecutarse. 
 
 Como resultado tendremos un proyecto con la estructura siguiente:
 
@@ -151,7 +152,7 @@ Como resultado tendremos un proyecto con la estructura siguiente:
 └── tsconfig.json
 ----
 <1> Archivo con los recursos a desplegar. Incopora un ejemplo 
-<2> Archivo de dependencias. La dependencia de OpenStack aparece como instalada al haber creado el proyecto con una plantilla de OpenStack
+<2> Archivo de dependencias. La dependencia de OpenStack aparece como instalada al haber creado el proyecto con la plantilla `openstack-typescript`
 <3> Configuración del nombre y descripción del proyecto y runtime de ejecución
 
 .Una instancia como ejemplo de recurso de OpenStack
@@ -176,17 +177,17 @@ Para la creación de la instancia:
 
 * Se usa `os` como alias dado al paquete OpenStack.
 * Se usa el módulo `compute` y el recurso `Instance`. 
-* Se asigna un nombre (`test` en este caso)
-* Se usa un objeto JSON para especificar los  https://www.pulumi.com/docs/reference/pkg/openstack/compute/instance/[ parámetros de configuración]. 
+* Se asigna un nombre para la instancia (`test` en este caso)
+* Se usa un objeto JSON para especificar los  https://www.pulumi.com/docs/reference/pkg/openstack/compute/instance/[ parámetros de configuración] de la instancia. 
 ****
 
 ### Configuración de las reglas de seguridad
 
-Las reglas de seguridad configuran el cortafuegos del proyecto de OpenStack. Para el ejemplo que nos ocupa, Rancher necesita inicialmente que estén abiertos los puertos TCP 80 y 443 para el tráfico HTTP (HTTP y HTTPS). Para implementarlo podemos incluir estas dos reglas de seguridad en el grupo `default` del proyecto o crear un grupo de seguridad específico para estas dos reglas. Posteriormente, al configurar la instancia se le aplicaría el grupo de seguridad `default` o el grupo específico para las reglas HTTP.En este ejemplo optamos por crear un grupo de seguridad específico.
+Las reglas de seguridad configuran el cortafuegos del proyecto de OpenStack. Para el ejemplo que nos ocupa, Rancher necesita inicialmente que estén abiertos los puertos TCP 80 y 443 para el tráfico HTTP (HTTP y HTTPS). Para implementarlo podemos incluir estas dos reglas de seguridad en el grupo `default` del proyecto o crear un grupo de seguridad específico para estas dos reglas. Posteriormente, al configurar la instancia se le aplicaría el grupo de seguridad `default` o el grupo específico creado para las reglas HTTP. En este ejemplo optamos por crear un grupo de seguridad específico.
 
 [IMPORTANT]
 ====
-Crear grupos de seguridad específicos para grupos de reglas de reglas de seguriddad es más laborioso que ir incluyendo las reglas en el grupo `default`. Sin embargo, provoca que haya instancias que tengan abiertos puertos de forma innecesaria, lo que puede derivar en un problema de seguridad. 
+Crear grupos de seguridad específicos para grupos de reglas de reglas de seguriddad es más laborioso que ir incluyendo las reglas en el grupo `default`. Sin embargo, el tener todas las reglas en el grupo de seguridad `default` provoca que haya instancias que tengan abiertos puertos de forma innecesaria, lo que puede derivar en un problema de seguridad. 
 ====
 
 #### Creación de un grupo de seguridad
@@ -200,7 +201,7 @@ const webSecGroup = new os.networking.SecGroup("web", {
 })
 ----
 
-Esto define un grupo de seguridad asignado a `webSecGroup` lo que nos permite manipularlo posteriormente, como para añadirle reglas de seguridad.
+Esto define un grupo de seguridad asignado a una constante `webSecGroup`. Asignar el recurso creado a una constante o una variable permite manipularlo posteriormente. En nuestro caso se añadirán reglas de seguridad.
 
 #### Añadir reglas de seguridad
 
@@ -237,7 +238,7 @@ const web443 = new os.networking.SecGroupRule("web443", {
 
 La configuración de seguridad completa para un entorno con Rancher y Kubernetes residiendo en el mismo proyecto OpenStack incluye una gran variedad de grupos y reglas de seguridad. La documentación oficial de Rancher especifica la https://rancher.com/docs/rancher/v2.x/en/installation/requirements/ports/#ports-for-rancher-launched-kubernetes-clusters-using-node-pools[lista de puertos a abrir] para cada componente. 
 
-Hacer una definición exhaustiva de todos los grupos y reglas de seguridad de un proyecto para producción está fuera del ámbito de este tutorial y nos limitaremos a incluir otro grupo de seguridad a modo de ejemplo para ver cómo configurar varios grupos de seguridad. Tomaremos como ejemplo la configuración de seguridad de los puertos 2379 y 2380 de la base de datos `etcd` que usa Kubernetes para el almacenamiento de la configuración.
+Hacer una definición exhaustiva de todos los grupos y reglas de seguridad de un proyecto para producción está fuera del ámbito de este tutorial. Por tanto, aquí nos limitaremos a incluir otro grupo de seguridad a modo de ejemplo para ver cómo configurar varios grupos de seguridad. Tomaremos como ejemplo la configuración de seguridad de los puertos 2379 y 2380 de la base de datos `etcd` que usa Kubernetes para el almacenamiento de la configuración.
 
 Finalmente, la configuración inicial de seguridad quedaría definida así en el archivo `index.ts`.
 
@@ -306,7 +307,7 @@ const web443 = new os.networking.SecGroupRule("web443", {
 });
 
 ----
-<1> CIDR para restringir el acceso remoto a instancias que se apliquen reglas de seguridad para ese CIDR
+<1> CIDR para permitir el acceso remoto a instancias a las que se apliquen reglas de seguridad para ese CIDR
 <2> Creación de un grupo de seguridad
 <3> Creación de una regla para un grupo de seguridad
 <4> Aplicación del CIDR a la regla de seguridad
@@ -323,7 +324,7 @@ La figura siguiente muestra el efecto del despliegue con los dos grupos de segur
 
 image::grupos-de-seguridad.png[]
 
-La figura siguiente ilustra las reglas de seguridad del grupo `web`. Para ese grupo se permitía el acceso a estos puertos desde cualquier dirección de Internet.
+La figura siguiente ilustra las reglas de seguridad del grupo `web`. Para ese grupo se permite el acceso a estos puertos desde cualquier dirección de Internet.
 
 image::reglas-de-seguridad-web.png[]
 
@@ -331,7 +332,7 @@ image::reglas-de-seguridad-web.png[]
 
 Tras definir los grupos de seguridad aplicables a la instancia continuamos ahora con la creación de un recurso de instancia en OpenStack, lo que nos permitirá tener una máquina virtual desplegada con código mediante Pulumi.
 
-Las instancias de OpenStack en Pulumi se crean con el recurso `Instance` del módulo `compute`. Basta con indicar un nombre para la instancia y un JSON para las opciones. En nuestro caso incluiremos la zona de disponibilidad, el nombre de la imagen tay como está definida en OpenStack, el nombre del _flavour_ o sabor a utilizar para crear la instancia, las redes a las que se conectará la instancia, el nombre del par de claves a inyectar en la instancia y los grupos de seguridad. Además, incluiremos un script de inicialización de la instancia en su creación (lo que se conoce como _user data_ en otros sistemas). En la sección <<Script de inicialización de Rancher>> se aportan los detalles de este script. Este script instalará Docker en la máquina virtual y ejecutará Rancher con Docker.
+Las instancias de OpenStack en Pulumi se crean con el recurso `Instance` del módulo `compute`. Basta con indicar un nombre para la instancia y un JSON para las opciones. En nuestro caso incluiremos la zona de disponibilidad, el nombre de la imagen tal y como está definida en OpenStack, el nombre del _flavour_ o sabor a utilizar para crear la instancia, las redes a las que se conectará la instancia, el nombre del par de claves a inyectar en la instancia y los grupos de seguridad que controlan el acceso a la instancia. Además, incluiremos un script de inicialización de la instancia en su creación (lo que se conoce como _user data_ en otros sistemas). En la sección <<Script de inicialización de Rancher>> se aportan los detalles de este script. Este script instalará Docker en la máquina virtual y ejecutará Rancher con Docker.
 
 El fragmento siguiente ilustra el código para la creación de una instancia en el archivo `index.ts`
 
@@ -369,7 +370,7 @@ image::instancia-creada.png[]
 
 ### Asignación de IP flotante
 
-Para poder acceder a la instancia desde el exterior asignaremos una dirección IP flotante. En nuestro caso ya tenemos la dirección IP flotante adjudicada al proyecto y está registrada en un DNS. Por tanto, no será necesario crear la dirección IP flotante en el proyecto, sino que pasaremos directamente al paso de asignar la dirección IP flotante a la instancia. Después veremos cómo sería el script si hubiese que crear la dirección IP flotante.
+Para poder acceder a la instancia desde el exterior le asignaremos una dirección IP flotante. En nuestro caso ya tenemos la dirección IP flotante adjudicada al proyecto y está registrada en un DNS para poder realizar una instalación de Rancher con nombre DNS. Por tanto, no será necesario crear la dirección IP flotante en el proyecto, sino que pasaremos directamente al paso de asignar dicha dirección IP flotante a la instancia. No obstante, también veremos cómo sería el script si hubiese que crear la dirección IP flotante.
 
 Las direcciones IP flotantes de OpenStack en Pulumi se asignan con el recurso `FloatingIpAssociate` del módulo `compute`. Basta con indicar un nombre para la asociación de la IP y un JSON para las opciones. En nuestro caso incluiremos la dirección IP flotante y el identificador de la instancia de Rancher.
 
@@ -541,7 +542,7 @@ image::openstack-node-driver.png[]
 
 ### Reorganización del código
 
-Hemos ido creando recursos poco a poco, comenzando con los grupos de seguridad para centrarnos posteriormente en la creación de la instancia. Actualmente tenemos toda la configuración de la infraestructura en un único archivo `index.ts`. A medida que incorporemos nuevos grupos de seguridad, nuevas reglas, nuevas instancias, el código se hará inmanejable. Actualmente, el archivo `index.js` luce de esta manera.
+Hemos ido creando recursos poco a poco, comenzando con los grupos de seguridad para centrarnos posteriormente en la creación de la instancia. Actualmente tenemos toda la configuración de la infraestructura en un único archivo `index.ts`. A medida que incorporemos nuevos grupos de seguridad, nuevas reglas, nuevas instancias, el código se terminará haciendo inmanejable. Actualmente, el archivo `index.js` luce de esta manera.
 
 .`index.ts` con todos los recursos juntos
 ====
@@ -728,7 +729,7 @@ export {webSecGroup, etcdSecGroup} <3>
 <3> Se exportan los grupos de seguridad para poder ser reutilizadas
 ====
 
-.`index.ts` con la configuración de la instancia del despliegue con la asignación de una IP flotante asignada previamente al proyecto
+.`index.ts` con la configuración de la instancia del despliegue y la asignación de una IP flotante asignada previamente al proyecto
 ====
 [source,ts]
 ----
