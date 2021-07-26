@@ -2,24 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.5.dev">
+<meta name="generator" content="Asciidoctor 2.0.8.dev">
 <meta name="author" content="Servicio de las Tecnologías de la Información y las Comunicaciones - Universidad de Almería">
 <title>Infraestructura como código con Pulumi</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
-/* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
-/* Remove comment around @import statement below when using as a custom stylesheet */
+/* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+/* Uncomment @import statement to use as custom stylesheet */
 /*@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";*/
-article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary{display:block}
-audio,canvas,video{display:inline-block}
+article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section{display:block}
+audio,video{display:inline-block}
 audio:not([controls]){display:none;height:0}
-[hidden],template{display:none}
-script{display:none!important}
 html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}
-body{margin:0}
-a{background:transparent}
+a{background:none}
 a:focus{outline:thin dotted}
 a:active,a:hover{outline:0}
 h1{font-size:2em;margin:.67em 0}
@@ -46,14 +43,12 @@ button,select{text-transform:none}
 button,html input[type="button"],input[type="reset"],input[type="submit"]{-webkit-appearance:button;cursor:pointer}
 button[disabled],html input[disabled]{cursor:default}
 input[type="checkbox"],input[type="radio"]{box-sizing:border-box;padding:0}
-input[type="search"]{-webkit-appearance:textfield;-moz-box-sizing:content-box;-webkit-box-sizing:content-box;box-sizing:content-box}
-input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-decoration{-webkit-appearance:none}
 button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}
 textarea{overflow:auto;vertical-align:top}
 table{border-collapse:collapse;border-spacing:0}
-*,*:before,*:after{-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box}
+*,*::before,*::after{-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box}
 html,body{font-size:100%}
-body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto;tab-size:4;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
 a:hover{cursor:pointer}
 img,object,embed{max-width:100%;height:auto}
 object,embed{height:100%}
@@ -65,18 +60,16 @@ img{-ms-interpolation-mode:bicubic}
 .text-center{text-align:center!important}
 .text-justify{text-align:justify!important}
 .hide{display:none}
-body{-webkit-font-smoothing:antialiased}
 img,object,svg{display:inline-block;vertical-align:middle}
 textarea{height:auto;min-height:50px}
 select{width:100%}
 .center{margin-left:auto;margin-right:auto}
-.spread{width:100%}
-p.lead,.paragraph.lead>p,#preamble>.sectionbody>.paragraph:first-of-type p{font-size:1.21875em;line-height:1.6}
+.stretch{width:100%}
 .subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#7a2518;font-weight:400;margin-top:0;margin-bottom:.25em}
 div,dl,dt,dd,ul,ol,li,h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6,pre,form,p,blockquote,th,td{margin:0;padding:0;direction:ltr}
 a{color:#2156a5;text-decoration:underline;line-height:inherit}
 a:hover,a:focus{color:#1d4b8f}
-a img{border:none}
+a img{border:0}
 p{font-family:inherit;font-weight:400;font-size:1em;line-height:1.6;margin-bottom:1.25em;text-rendering:optimizeLegibility}
 p aside{font-size:.875em;line-height:1.35;font-style:italic}
 h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Open Sans","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#ba3925;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.0125em}
@@ -86,19 +79,18 @@ h2{font-size:1.6875em}
 h3,#toctitle,.sidebarblock>.content>.title{font-size:1.375em}
 h4,h5{font-size:1.125em}
 h6{font-size:1em}
-hr{border:solid #ddddd8;border-width:1px 0 0;clear:both;margin:1.25em 0 1.1875em;height:0}
+hr{border:solid #dddddf;border-width:1px 0 0;clear:both;margin:1.25em 0 1.1875em;height:0}
 em,i{font-style:italic;line-height:inherit}
 strong,b{font-weight:bold;line-height:inherit}
 small{font-size:60%;line-height:inherit}
 code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
 ul,ol,dl{font-size:1em;line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
-ul,ol,ul.no-bullet,ol.no-bullet{margin-left:1.5em}
+ul,ol{margin-left:1.5em}
 ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0;font-size:1em}
 ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
 ul.square{list-style-type:square}
 ul.circle{list-style-type:circle}
 ul.disc{list-style-type:disc}
-ul.no-bullet{list-style:none}
 ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
 dl dt{margin-bottom:.3125em;font-weight:bold}
 dl dd{margin-bottom:1.25em}
@@ -106,55 +98,65 @@ abbr,acronym{text-transform:uppercase;font-size:90%;color:rgba(0,0,0,.8);border-
 abbr{text-transform:none}
 blockquote{margin:0 0 1.25em;padding:.5625em 1.25em 0 1.1875em;border-left:1px solid #ddd}
 blockquote cite{display:block;font-size:.9375em;color:rgba(0,0,0,.6)}
-blockquote cite:before{content:"\2014 \0020"}
+blockquote cite::before{content:"\2014 \0020"}
 blockquote cite a,blockquote cite a:visited{color:rgba(0,0,0,.6)}
 blockquote,blockquote p{line-height:1.6;color:rgba(0,0,0,.85)}
-@media only screen and (min-width:768px){h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2}
+@media screen and (min-width:768px){h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2}
 h1{font-size:2.75em}
 h2{font-size:2.3125em}
 h3,#toctitle,.sidebarblock>.content>.title{font-size:1.6875em}
 h4{font-size:1.4375em}}
 table{background:#fff;margin-bottom:1.25em;border:solid 1px #dedede}
-table thead,table tfoot{background:#f7f8f7;font-weight:bold}
+table thead,table tfoot{background:#f7f8f7}
 table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:.5em .625em .625em;font-size:inherit;color:rgba(0,0,0,.8);text-align:left}
 table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
-table tr.even,table tr.alt,table tr:nth-of-type(even){background:#f8f8f7}
+table tr.even,table tr.alt{background:#f8f8f7}
 table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{display:table-cell;line-height:1.6}
-body{tab-size:4}
 h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
 h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
-.clearfix:before,.clearfix:after,.float-group:before,.float-group:after{content:" ";display:table}
-.clearfix:after,.float-group:after{clear:both}
-*:not(pre)>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background-color:#f7f7f8;-webkit-border-radius:4px;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
-pre,pre>code{line-height:1.45;color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;text-rendering:optimizeSpeed}
+.clearfix::before,.clearfix::after,.float-group::before,.float-group::after{content:" ";display:table}
+.clearfix::after,.float-group::after{clear:both}
+:not(pre):not([class^=L])>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background:#f7f7f8;-webkit-border-radius:4px;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed;word-wrap:break-word}
+:not(pre)>code.nobreak{word-wrap:normal}
+:not(pre)>code.nowrap{white-space:nowrap}
+pre{color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;line-height:1.45;text-rendering:optimizeSpeed}
+pre code,pre pre{color:inherit;font-size:inherit;line-height:inherit}
+pre>code{display:block}
+pre.nowrap,pre.nowrap pre{white-space:pre;word-wrap:normal}
+em em{font-style:normal}
+strong strong{font-weight:400}
 .keyseq{color:rgba(51,51,51,.8)}
-kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
+kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
 .keyseq kbd:first-child{margin-left:0}
 .keyseq kbd:last-child{margin-right:0}
-.menuseq,.menu{color:rgba(0,0,0,.8)}
-b.button:before,b.button:after{position:relative;top:-1px;font-weight:400}
-b.button:before{content:"[";padding:0 3px 0 2px}
-b.button:after{content:"]";padding:0 2px 0 3px}
+.menuseq,.menuref{color:#000}
+.menuseq b:not(.caret),.menuref{font-weight:inherit}
+.menuseq{word-spacing:-.02em}
+.menuseq b.caret{font-size:1.25em;line-height:.8}
+.menuseq i.caret{font-weight:bold;text-align:center;width:.45em}
+b.button::before,b.button::after{position:relative;top:-1px;font-weight:400}
+b.button::before{content:"[";padding:0 3px 0 2px}
+b.button::after{content:"]";padding:0 2px 0 3px}
 p a>code:hover{color:rgba(0,0,0,.9)}
 #header,#content,#footnotes,#footer{width:100%;margin-left:auto;margin-right:auto;margin-top:0;margin-bottom:0;max-width:62.5em;*zoom:1;position:relative;padding-left:.9375em;padding-right:.9375em}
-#header:before,#header:after,#content:before,#content:after,#footnotes:before,#footnotes:after,#footer:before,#footer:after{content:" ";display:table}
-#header:after,#content:after,#footnotes:after,#footer:after{clear:both}
+#header::before,#header::after,#content::before,#content::after,#footnotes::before,#footnotes::after,#footer::before,#footer::after{content:" ";display:table}
+#header::after,#content::after,#footnotes::after,#footer::after{clear:both}
 #content{margin-top:1.25em}
-#content:before{content:none}
+#content::before{content:none}
 #header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
-#header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #ddddd8}
-#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #ddddd8;padding-bottom:8px}
-#header .details{border-bottom:1px solid #ddddd8;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:-ms-flexbox;display:-webkit-flex;display:flex;-ms-flex-flow:row wrap;-webkit-flex-flow:row wrap;flex-flow:row wrap}
+#header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #dddddf}
+#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #dddddf;padding-bottom:8px}
+#header .details{border-bottom:1px solid #dddddf;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:-ms-flexbox;display:-webkit-flex;display:flex;-ms-flex-flow:row wrap;-webkit-flex-flow:row wrap;flex-flow:row wrap}
 #header .details span:first-child{margin-left:-.125em}
 #header .details span.email a{color:rgba(0,0,0,.85)}
 #header .details br{display:none}
-#header .details br+span:before{content:"\00a0\2013\00a0"}
-#header .details br+span.author:before{content:"\00a0\22c5\00a0";color:rgba(0,0,0,.85)}
-#header .details br+span#revremark:before{content:"\00a0|\00a0"}
+#header .details br+span::before{content:"\00a0\2013\00a0"}
+#header .details br+span.author::before{content:"\00a0\22c5\00a0";color:rgba(0,0,0,.85)}
+#header .details br+span#revremark::before{content:"\00a0|\00a0"}
 #header #revnumber{text-transform:capitalize}
-#header #revnumber:after{content:"\00a0"}
-#content>h1:first-child:not([class]){color:rgba(0,0,0,.85);border-bottom:1px solid #ddddd8;padding-bottom:8px;margin-top:0;padding-top:1rem;margin-bottom:1.25rem}
-#toc{border-bottom:1px solid #efefed;padding-bottom:.5em}
+#header #revnumber::after{content:"\00a0"}
+#content>h1:first-child:not([class]){color:rgba(0,0,0,.85);border-bottom:1px solid #dddddf;padding-bottom:8px;margin-top:0;padding-top:1rem;margin-bottom:1.25rem}
+#toc{border-bottom:1px solid #e7e7e9;padding-bottom:.5em}
 #toc>ul{margin-left:.125em}
 #toc ul.sectlevel0>li>a{font-style:italic}
 #toc ul.sectlevel0 ul.sectlevel1{margin:.5em 0}
@@ -163,16 +165,16 @@ p a>code:hover{color:rgba(0,0,0,.9)}
 #toc a{text-decoration:none}
 #toc a:active{text-decoration:underline}
 #toctitle{color:#7a2518;font-size:1.2em}
-@media only screen and (min-width:768px){#toctitle{font-size:1.375em}
+@media screen and (min-width:768px){#toctitle{font-size:1.375em}
 body.toc2{padding-left:15em;padding-right:0}
-#toc.toc2{margin-top:0!important;background-color:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #efefed;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
+#toc.toc2{margin-top:0!important;background:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #e7e7e9;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
 #toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
 #toc.toc2>ul{font-size:.9em;margin-bottom:0}
 #toc.toc2 ul ul{margin-left:0;padding-left:1em}
 #toc.toc2 ul.sectlevel0 ul.sectlevel1{padding-left:0;margin-top:.5em;margin-bottom:.5em}
 body.toc2.toc-right{padding-left:0;padding-right:15em}
-body.toc2.toc-right #toc.toc2{border-right-width:0;border-left:1px solid #efefed;left:auto;right:0}}
-@media only screen and (min-width:1280px){body.toc2{padding-left:20em;padding-right:0}
+body.toc2.toc-right #toc.toc2{border-right-width:0;border-left:1px solid #e7e7e9;left:auto;right:0}}
+@media screen and (min-width:1280px){body.toc2{padding-left:20em;padding-right:0}
 #toc.toc2{width:20em}
 #toc.toc2 #toctitle{font-size:1.375em}
 #toc.toc2>ul{font-size:.95em}
@@ -181,89 +183,100 @@ body.toc2.toc-right{padding-left:0;padding-right:20em}}
 #content #toc{border-style:solid;border-width:1px;border-color:#e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;-webkit-border-radius:4px;border-radius:4px}
 #content #toc>:first-child{margin-top:0}
 #content #toc>:last-child{margin-bottom:0}
-#footer{max-width:100%;background-color:rgba(0,0,0,.8);padding:1.25em}
+#footer{max-width:100%;background:rgba(0,0,0,.8);padding:1.25em}
 #footer-text{color:rgba(255,255,255,.8);line-height:1.44}
+#content{margin-bottom:.625em}
 .sect1{padding-bottom:.625em}
-@media only screen and (min-width:768px){.sect1{padding-bottom:1.25em}}
-.sect1+.sect1{border-top:1px solid #efefed}
+@media screen and (min-width:768px){#content{margin-bottom:1.25em}
+.sect1{padding-bottom:1.25em}}
+.sect1:last-child{padding-bottom:0}
+.sect1+.sect1{border-top:1px solid #e7e7e9}
 #content h1>a.anchor,h2>a.anchor,h3>a.anchor,#toctitle>a.anchor,.sidebarblock>.content>.title>a.anchor,h4>a.anchor,h5>a.anchor,h6>a.anchor{position:absolute;z-index:1001;width:1.5ex;margin-left:-1.5ex;display:block;text-decoration:none!important;visibility:hidden;text-align:center;font-weight:400}
-#content h1>a.anchor:before,h2>a.anchor:before,h3>a.anchor:before,#toctitle>a.anchor:before,.sidebarblock>.content>.title>a.anchor:before,h4>a.anchor:before,h5>a.anchor:before,h6>a.anchor:before{content:"\00A7";font-size:.85em;display:block;padding-top:.1em}
+#content h1>a.anchor::before,h2>a.anchor::before,h3>a.anchor::before,#toctitle>a.anchor::before,.sidebarblock>.content>.title>a.anchor::before,h4>a.anchor::before,h5>a.anchor::before,h6>a.anchor::before{content:"\00A7";font-size:.85em;display:block;padding-top:.1em}
 #content h1:hover>a.anchor,#content h1>a.anchor:hover,h2:hover>a.anchor,h2>a.anchor:hover,h3:hover>a.anchor,#toctitle:hover>a.anchor,.sidebarblock>.content>.title:hover>a.anchor,h3>a.anchor:hover,#toctitle>a.anchor:hover,.sidebarblock>.content>.title>a.anchor:hover,h4:hover>a.anchor,h4>a.anchor:hover,h5:hover>a.anchor,h5>a.anchor:hover,h6:hover>a.anchor,h6>a.anchor:hover{visibility:visible}
 #content h1>a.link,h2>a.link,h3>a.link,#toctitle>a.link,.sidebarblock>.content>.title>a.link,h4>a.link,h5>a.link,h6>a.link{color:#ba3925;text-decoration:none}
 #content h1>a.link:hover,h2>a.link:hover,h3>a.link:hover,#toctitle>a.link:hover,.sidebarblock>.content>.title>a.link:hover,h4>a.link:hover,h5>a.link:hover,h6>a.link:hover{color:#a53221}
-.audioblock,.imageblock,.literalblock,.listingblock,.stemblock,.videoblock{margin-bottom:1.25em}
+details,.audioblock,.imageblock,.literalblock,.listingblock,.stemblock,.videoblock{margin-bottom:1.25em}
+details>summary:first-of-type{cursor:pointer;display:list-item;outline:none;margin-bottom:.75em}
 .admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{text-rendering:optimizeLegibility;text-align:left;font-family:"Noto Serif","DejaVu Serif",serif;font-size:1rem;font-style:italic}
-table.tableblock>caption.title{white-space:nowrap;overflow:visible;max-width:0}
-.paragraph.lead>p,#preamble>.sectionbody>.paragraph:first-of-type p{color:rgba(0,0,0,.85)}
-table.tableblock #preamble>.sectionbody>.paragraph:first-of-type p{font-size:inherit}
+table.tableblock.fit-content>caption.title{white-space:nowrap;width:0}
+.paragraph.lead>p,#preamble>.sectionbody>[class="paragraph"]:first-of-type p{font-size:1.21875em;line-height:1.6;color:rgba(0,0,0,.85)}
+table.tableblock #preamble>.sectionbody>[class="paragraph"]:first-of-type p{font-size:inherit}
 .admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
 .admonitionblock>table td.icon{text-align:center;width:80px}
 .admonitionblock>table td.icon img{max-width:none}
 .admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
-.admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #ddddd8;color:rgba(0,0,0,.6)}
+.admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #dddddf;color:rgba(0,0,0,.6)}
 .admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
 .exampleblock>.content{border-style:solid;border-width:1px;border-color:#e6e6e6;margin-bottom:1.25em;padding:1.25em;background:#fff;-webkit-border-radius:4px;border-radius:4px}
 .exampleblock>.content>:first-child{margin-top:0}
 .exampleblock>.content>:last-child{margin-bottom:0}
-.sidebarblock{border-style:solid;border-width:1px;border-color:#e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;-webkit-border-radius:4px;border-radius:4px}
+.sidebarblock{border-style:solid;border-width:1px;border-color:#dbdbd6;margin-bottom:1.25em;padding:1.25em;background:#f3f3f2;-webkit-border-radius:4px;border-radius:4px}
 .sidebarblock>:first-child{margin-top:0}
 .sidebarblock>:last-child{margin-bottom:0}
 .sidebarblock>.content>.title{color:#7a2518;margin-top:0;text-align:center}
 .exampleblock>.content>:last-child>:last-child,.exampleblock>.content .olist>ol>li:last-child>:last-child,.exampleblock>.content .ulist>ul>li:last-child>:last-child,.exampleblock>.content .qlist>ol>li:last-child>:last-child,.sidebarblock>.content>:last-child>:last-child,.sidebarblock>.content .olist>ol>li:last-child>:last-child,.sidebarblock>.content .ulist>ul>li:last-child>:last-child,.sidebarblock>.content .qlist>ol>li:last-child>:last-child{margin-bottom:0}
-.literalblock pre,.listingblock pre:not(.highlight),.listingblock pre[class="highlight"],.listingblock pre[class^="highlight "],.listingblock pre.CodeRay,.listingblock pre.prettyprint{background:#f7f7f8}
-.sidebarblock .literalblock pre,.sidebarblock .listingblock pre:not(.highlight),.sidebarblock .listingblock pre[class="highlight"],.sidebarblock .listingblock pre[class^="highlight "],.sidebarblock .listingblock pre.CodeRay,.sidebarblock .listingblock pre.prettyprint{background:#f2f1f1}
-.literalblock pre,.literalblock pre[class],.listingblock pre,.listingblock pre[class]{-webkit-border-radius:4px;border-radius:4px;word-wrap:break-word;padding:1em;font-size:.8125em}
-.literalblock pre.nowrap,.literalblock pre[class].nowrap,.listingblock pre.nowrap,.listingblock pre[class].nowrap{overflow-x:auto;white-space:pre;word-wrap:normal}
-@media only screen and (min-width:768px){.literalblock pre,.literalblock pre[class],.listingblock pre,.listingblock pre[class]{font-size:.90625em}}
-@media only screen and (min-width:1280px){.literalblock pre,.literalblock pre[class],.listingblock pre,.listingblock pre[class]{font-size:1em}}
-.literalblock.output pre{color:#f7f7f8;background-color:rgba(0,0,0,.9)}
+.literalblock pre,.listingblock>.content>pre{-webkit-border-radius:4px;border-radius:4px;word-wrap:break-word;overflow-x:auto;padding:1em;font-size:.8125em}
+@media screen and (min-width:768px){.literalblock pre,.listingblock>.content>pre{font-size:.90625em}}
+@media screen and (min-width:1280px){.literalblock pre,.listingblock>.content>pre{font-size:1em}}
+.literalblock pre,.listingblock>.content>pre:not(.highlight),.listingblock>.content>pre[class="highlight"],.listingblock>.content>pre[class^="highlight "]{background:#f7f7f8}
+.literalblock.output pre{color:#f7f7f8;background:rgba(0,0,0,.9)}
+.listingblock>.content{position:relative}
+.listingblock code[data-lang]::before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:inherit;opacity:.5}
+.listingblock:hover code[data-lang]::before{display:block}
+.listingblock.terminal pre .command::before{content:attr(data-prompt);padding-right:.5em;color:inherit;opacity:.5}
+.listingblock.terminal pre .command:not([data-prompt])::before{content:"$"}
 .listingblock pre.highlightjs{padding:0}
 .listingblock pre.highlightjs>code{padding:1em;-webkit-border-radius:4px;border-radius:4px}
 .listingblock pre.prettyprint{border-width:0}
-.listingblock>.content{position:relative}
-.listingblock code[data-lang]:before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:#999}
-.listingblock:hover code[data-lang]:before{display:block}
-.listingblock.terminal pre .command:before{content:attr(data-prompt);padding-right:.5em;color:#999}
-.listingblock.terminal pre .command:not([data-prompt]):before{content:"$"}
-table.pyhltable{border-collapse:separate;border:0;margin-bottom:0;background:none}
-table.pyhltable td{vertical-align:top;padding-top:0;padding-bottom:0;line-height:1.45}
-table.pyhltable td.code{padding-left:.75em;padding-right:0}
-pre.pygments .lineno,table.pyhltable td:not(.code){color:#999;padding-left:0;padding-right:.5em;border-right:1px solid #ddddd8}
-pre.pygments .lineno{display:inline-block;margin-right:.25em}
-table.pyhltable .linenodiv{background:none!important;padding-right:0!important}
+.prettyprint{background:#f7f7f8}
+pre.prettyprint .linenums{line-height:1.45;margin-left:2em}
+pre.prettyprint li{background:none;list-style-type:inherit;padding-left:0}
+pre.prettyprint li code[data-lang]::before{opacity:1}
+pre.prettyprint li:not(:first-child) code[data-lang]::before{display:none}
+table.linenotable{border-collapse:separate;border:0;margin-bottom:0;background:none}
+table.linenotable td[class]{color:inherit;vertical-align:top;padding:0;line-height:inherit;white-space:normal}
+table.linenotable td.code{padding-left:.75em}
+table.linenotable td.linenos{border-right:1px solid currentColor;opacity:.35;padding-right:.5em}
+pre.pygments .lineno{border-right:1px solid currentColor;opacity:.35;display:inline-block;margin-right:.75em}
+pre.pygments .lineno::before{content:"";margin-right:-.125em}
 .quoteblock{margin:0 1em 1.25em 1.5em;display:table}
 .quoteblock>.title{margin-left:-1.5em;margin-bottom:.75em}
-.quoteblock blockquote,.quoteblock blockquote p{color:rgba(0,0,0,.85);font-size:1.15rem;line-height:1.75;word-spacing:.1em;letter-spacing:0;font-style:italic;text-align:justify}
+.quoteblock blockquote,.quoteblock p{color:rgba(0,0,0,.85);font-size:1.15rem;line-height:1.75;word-spacing:.1em;letter-spacing:0;font-style:italic;text-align:justify}
 .quoteblock blockquote{margin:0;padding:0;border:0}
-.quoteblock blockquote:before{content:"\201c";float:left;font-size:2.75em;font-weight:bold;line-height:.6em;margin-left:-.6em;color:#7a2518;text-shadow:0 1px 2px rgba(0,0,0,.1)}
+.quoteblock blockquote::before{content:"\201c";float:left;font-size:2.75em;font-weight:bold;line-height:.6em;margin-left:-.6em;color:#7a2518;text-shadow:0 1px 2px rgba(0,0,0,.1)}
 .quoteblock blockquote>.paragraph:last-child p{margin-bottom:0}
-.quoteblock .attribution{margin-top:.5em;margin-right:.5ex;text-align:right}
-.quoteblock .quoteblock{margin-left:0;margin-right:0;padding:.5em 0;border-left:3px solid rgba(0,0,0,.6)}
-.quoteblock .quoteblock blockquote{padding:0 0 0 .75em}
-.quoteblock .quoteblock blockquote:before{display:none}
-.verseblock{margin:0 1em 1.25em 1em}
+.quoteblock .attribution{margin-top:.75em;margin-right:.5ex;text-align:right}
+.verseblock{margin:0 1em 1.25em}
 .verseblock pre{font-family:"Open Sans","DejaVu Sans",sans;font-size:1.15rem;color:rgba(0,0,0,.85);font-weight:300;text-rendering:optimizeLegibility}
 .verseblock pre strong{font-weight:400}
 .verseblock .attribution{margin-top:1.25rem;margin-left:.5ex}
 .quoteblock .attribution,.verseblock .attribution{font-size:.9375em;line-height:1.45;font-style:italic}
 .quoteblock .attribution br,.verseblock .attribution br{display:none}
 .quoteblock .attribution cite,.verseblock .attribution cite{display:block;letter-spacing:-.025em;color:rgba(0,0,0,.6)}
-.quoteblock.abstract{margin:0 0 1.25em 0;display:block}
-.quoteblock.abstract blockquote,.quoteblock.abstract blockquote p{text-align:left;word-spacing:0}
-.quoteblock.abstract blockquote:before,.quoteblock.abstract blockquote p:first-of-type:before{display:none}
+.quoteblock.abstract blockquote::before,.quoteblock.excerpt blockquote::before,.quoteblock .quoteblock blockquote::before{display:none}
+.quoteblock.abstract blockquote,.quoteblock.abstract p,.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{line-height:1.6;word-spacing:0}
+.quoteblock.abstract{margin:0 1em 1.25em;display:block}
+.quoteblock.abstract>.title{margin:0 0 .375em;font-size:1.15em;text-align:center}
+.quoteblock.excerpt,.quoteblock .quoteblock{margin:0 0 1.25em;padding:0 0 .25em 1em;border-left:.25em solid #dddddf}
+.quoteblock.excerpt blockquote,.quoteblock.excerpt p,.quoteblock .quoteblock blockquote,.quoteblock .quoteblock p{color:inherit;font-size:1.0625rem}
+.quoteblock.excerpt .attribution,.quoteblock .quoteblock .attribution{color:inherit;text-align:left;margin-right:0}
 table.tableblock{max-width:100%;border-collapse:separate}
-table.tableblock td>.paragraph:last-child p>p:last-child,table.tableblock th>p:last-child,table.tableblock td>p:last-child{margin-bottom:0}
+p.tableblock:last-child{margin-bottom:0}
+td.tableblock>.content>:last-child{margin-bottom:-1.25em}
+td.tableblock>.content>:last-child.sidebarblock{margin-bottom:0}
 table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
-table.grid-all th.tableblock,table.grid-all td.tableblock{border-width:0 1px 1px 0}
-table.grid-all tfoot>tr>th.tableblock,table.grid-all tfoot>tr>td.tableblock{border-width:1px 1px 0 0}
-table.grid-cols th.tableblock,table.grid-cols td.tableblock{border-width:0 1px 0 0}
-table.grid-all *>tr>.tableblock:last-child,table.grid-cols *>tr>.tableblock:last-child{border-right-width:0}
-table.grid-rows th.tableblock,table.grid-rows td.tableblock{border-width:0 0 1px 0}
-table.grid-all tbody>tr:last-child>th.tableblock,table.grid-all tbody>tr:last-child>td.tableblock,table.grid-all thead:last-child>tr>th.tableblock,table.grid-rows tbody>tr:last-child>th.tableblock,table.grid-rows tbody>tr:last-child>td.tableblock,table.grid-rows thead:last-child>tr>th.tableblock{border-bottom-width:0}
-table.grid-rows tfoot>tr>th.tableblock,table.grid-rows tfoot>tr>td.tableblock{border-width:1px 0 0 0}
+table.grid-all>thead>tr>.tableblock,table.grid-all>tbody>tr>.tableblock{border-width:0 1px 1px 0}
+table.grid-all>tfoot>tr>.tableblock{border-width:1px 1px 0 0}
+table.grid-cols>*>tr>.tableblock{border-width:0 1px 0 0}
+table.grid-rows>thead>tr>.tableblock,table.grid-rows>tbody>tr>.tableblock{border-width:0 0 1px}
+table.grid-rows>tfoot>tr>.tableblock{border-width:1px 0 0}
+table.grid-all>*>tr>.tableblock:last-child,table.grid-cols>*>tr>.tableblock:last-child{border-right-width:0}
+table.grid-all>tbody>tr:last-child>.tableblock,table.grid-all>thead:last-child>tr>.tableblock,table.grid-rows>tbody>tr:last-child>.tableblock,table.grid-rows>thead:last-child>tr>.tableblock{border-bottom-width:0}
 table.frame-all{border-width:1px}
 table.frame-sides{border-width:0 1px}
-table.frame-topbot{border-width:1px 0}
+table.frame-topbot,table.frame-ends{border-width:1px 0}
+table.stripes-all tr,table.stripes-odd tr:nth-of-type(odd),table.stripes-even tr:nth-of-type(even),table.stripes-hover tr:hover{background:#f8f8f7}
 th.halign-left,td.halign-left{text-align:left}
 th.halign-right,td.halign-right{text-align:right}
 th.halign-center,td.halign-center{text-align:center}
@@ -275,19 +288,19 @@ tbody tr th{display:table-cell;line-height:1.6;background:#f7f8f7}
 tbody tr th,tbody tr th p,tfoot tr th,tfoot tr th p{color:rgba(0,0,0,.8);font-weight:bold}
 p.tableblock>code:only-child{background:none;padding:0}
 p.tableblock{font-size:1em}
-td>div.verse{white-space:pre}
 ol{margin-left:1.75em}
 ul li ol{margin-left:1.5em}
 dl dd{margin-left:1.125em}
 dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
 ol>li p,ul>li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
-ul.unstyled,ol.unnumbered,ul.checklist,ul.none{list-style-type:none}
-ul.unstyled,ol.unnumbered,ul.checklist{margin-left:.625em}
-ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1em;font-size:.85em}
-ul.checklist li>p:first-child>input[type="checkbox"]:first-child{width:1em;position:relative;top:1px}
-ul.inline{margin:0 auto .625em auto;margin-left:-1.375em;margin-right:0;padding:0;list-style:none;overflow:hidden}
-ul.inline>li{list-style:none;float:left;margin-left:1.375em;display:block}
-ul.inline>li>*{display:block}
+ul.checklist,ul.none,ol.none,ul.no-bullet,ol.no-bullet,ol.unnumbered,ul.unstyled,ol.unstyled{list-style-type:none}
+ul.no-bullet,ol.no-bullet,ol.unnumbered{margin-left:.625em}
+ul.unstyled,ol.unstyled{margin-left:0}
+ul.checklist{margin-left:.625em}
+ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1.25em;font-size:.8em;position:relative;bottom:.125em}
+ul.checklist li>p:first-child>input[type="checkbox"]:first-child{margin-right:.25em}
+ul.inline{display:-ms-flexbox;display:-webkit-box;display:flex;-ms-flex-flow:row wrap;-webkit-flex-flow:row wrap;flex-flow:row wrap;list-style:none;margin:0 0 .625em -1.25em}
+ul.inline>li{margin-left:1.25em}
 .unstyled dl dt{font-weight:400;font-style:normal}
 ol.arabic{list-style-type:decimal}
 ol.decimal{list-style-type:decimal-leading-zero}
@@ -301,11 +314,12 @@ ol.lowergreek{list-style-type:lower-greek}
 td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
 td.hdlist1{font-weight:bold;padding-bottom:1.25em}
 .literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
-.colist>table tr>td:first-of-type{padding:0 .75em;line-height:1}
-.colist>table tr>td:last-of-type{padding:.25em 0}
+.colist td:not([class]):first-child{padding:.4em .75em 0;line-height:1;vertical-align:top}
+.colist td:not([class]):first-child img{max-width:none}
+.colist td:not([class]):last-child{padding:.25em 0}
 .thumb,.th{line-height:0;display:inline-block;border:solid 4px #fff;-webkit-box-shadow:0 0 0 1px #ddd;box-shadow:0 0 0 1px #ddd}
-.imageblock.left,.imageblock[style*="float: left"]{margin:.25em .625em 1.25em 0}
-.imageblock.right,.imageblock[style*="float: right"]{margin:.25em 0 1.25em .625em}
+.imageblock.left{margin:.25em .625em 1.25em 0}
+.imageblock.right{margin:.25em 0 1.25em .625em}
 .imageblock>.title{margin-bottom:0}
 .imageblock.thumb,.imageblock.th{border-width:6px}
 .imageblock.thumb>.title,.imageblock.th>.title{padding:0 .125em}
@@ -318,9 +332,9 @@ sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:sup
 sup.footnote a,sup.footnoteref a{text-decoration:none}
 sup.footnote a:active,sup.footnoteref a:active{text-decoration:underline}
 #footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
-#footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em 0;border-width:1px 0 0 0}
-#footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;text-indent:-1.05em;margin-bottom:.2em}
-#footnotes .footnote a:first-of-type{font-weight:bold;text-decoration:none}
+#footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em;border-width:1px 0 0}
+#footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;margin-bottom:.2em}
+#footnotes .footnote a:first-of-type{font-weight:bold;text-decoration:none;margin-left:-1.05em}
 #footnotes .footnote:last-of-type{margin-bottom:0}
 #content #footnotes{margin-top:-.625em;margin-bottom:0;padding:.75em 0}
 .gist .file-data>table{border:0;background:#fff;width:100%;margin-bottom:0}
@@ -332,48 +346,49 @@ div.unbreakable{page-break-inside:avoid}
 .overline{text-decoration:overline}
 .line-through{text-decoration:line-through}
 .aqua{color:#00bfbf}
-.aqua-background{background-color:#00fafa}
+.aqua-background{background:#00fafa}
 .black{color:#000}
-.black-background{background-color:#000}
+.black-background{background:#000}
 .blue{color:#0000bf}
-.blue-background{background-color:#0000fa}
+.blue-background{background:#0000fa}
 .fuchsia{color:#bf00bf}
-.fuchsia-background{background-color:#fa00fa}
+.fuchsia-background{background:#fa00fa}
 .gray{color:#606060}
-.gray-background{background-color:#7d7d7d}
+.gray-background{background:#7d7d7d}
 .green{color:#006000}
-.green-background{background-color:#007d00}
+.green-background{background:#007d00}
 .lime{color:#00bf00}
-.lime-background{background-color:#00fa00}
+.lime-background{background:#00fa00}
 .maroon{color:#600000}
-.maroon-background{background-color:#7d0000}
+.maroon-background{background:#7d0000}
 .navy{color:#000060}
-.navy-background{background-color:#00007d}
+.navy-background{background:#00007d}
 .olive{color:#606000}
-.olive-background{background-color:#7d7d00}
+.olive-background{background:#7d7d00}
 .purple{color:#600060}
-.purple-background{background-color:#7d007d}
+.purple-background{background:#7d007d}
 .red{color:#bf0000}
-.red-background{background-color:#fa0000}
+.red-background{background:#fa0000}
 .silver{color:#909090}
-.silver-background{background-color:#bcbcbc}
+.silver-background{background:#bcbcbc}
 .teal{color:#006060}
-.teal-background{background-color:#007d7d}
+.teal-background{background:#007d7d}
 .white{color:#bfbfbf}
-.white-background{background-color:#fafafa}
+.white-background{background:#fafafa}
 .yellow{color:#bfbf00}
-.yellow-background{background-color:#fafa00}
+.yellow-background{background:#fafa00}
 span.icon>.fa{cursor:default}
+a span.icon>.fa{cursor:inherit}
 .admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
-.admonitionblock td.icon .icon-note:before{content:"\f05a";color:#19407c}
-.admonitionblock td.icon .icon-tip:before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
-.admonitionblock td.icon .icon-warning:before{content:"\f071";color:#bf6900}
-.admonitionblock td.icon .icon-caution:before{content:"\f06d";color:#bf3400}
-.admonitionblock td.icon .icon-important:before{content:"\f06a";color:#bf0000}
-.conum[data-value]{display:inline-block;color:#fff!important;background-color:rgba(0,0,0,.8);-webkit-border-radius:100px;border-radius:100px;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
+.admonitionblock td.icon .icon-note::before{content:"\f05a";color:#19407c}
+.admonitionblock td.icon .icon-tip::before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
+.admonitionblock td.icon .icon-warning::before{content:"\f071";color:#bf6900}
+.admonitionblock td.icon .icon-caution::before{content:"\f06d";color:#bf3400}
+.admonitionblock td.icon .icon-important::before{content:"\f06a";color:#bf0000}
+.conum[data-value]{display:inline-block;color:#fff!important;background:rgba(0,0,0,.8);-webkit-border-radius:100px;border-radius:100px;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
 .conum[data-value] *{color:#fff!important}
 .conum[data-value]+b{display:none}
-.conum[data-value]:after{content:attr(data-value)}
+.conum[data-value]::after{content:attr(data-value)}
 pre .conum[data-value]{position:relative;top:-.125em}
 b.conum *{color:inherit!important}
 .conum:not([data-value]):empty{display:none}
@@ -383,41 +398,44 @@ p strong,td.content strong,div.footnote strong{letter-spacing:-.005em}
 p,blockquote,dt,td.content,span.alt{font-size:1.0625rem}
 p{margin-bottom:1.25rem}
 .sidebarblock p,.sidebarblock dt,.sidebarblock td.content,p.tableblock{font-size:1em}
-.exampleblock>.content{background-color:#fffef7;border-color:#e0e0dc;-webkit-box-shadow:0 1px 4px #e0e0dc;box-shadow:0 1px 4px #e0e0dc}
+.exampleblock>.content{background:#fffef7;border-color:#e0e0dc;-webkit-box-shadow:0 1px 4px #e0e0dc;box-shadow:0 1px 4px #e0e0dc}
 .print-only{display:none!important}
-@media print{@page{margin:1.25cm .75cm}
-*{-webkit-box-shadow:none!important;box-shadow:none!important;text-shadow:none!important}
+@page{margin:1.25cm .75cm}
+@media print{*{-webkit-box-shadow:none!important;box-shadow:none!important;text-shadow:none!important}
+html{font-size:80%}
 a{color:inherit!important;text-decoration:underline!important}
 a.bare,a[href^="#"],a[href^="mailto:"]{text-decoration:none!important}
-a[href^="http:"]:not(.bare):after,a[href^="https:"]:not(.bare):after{content:"(" attr(href) ")";display:inline-block;font-size:.875em;padding-left:.25em}
-abbr[title]:after{content:" (" attr(title) ")"}
+a[href^="http:"]:not(.bare)::after,a[href^="https:"]:not(.bare)::after{content:"(" attr(href) ")";display:inline-block;font-size:.875em;padding-left:.25em}
+abbr[title]::after{content:" (" attr(title) ")"}
 pre,blockquote,tr,img,object,svg{page-break-inside:avoid}
 thead{display:table-header-group}
 svg{max-width:100%}
 p,blockquote,dt,td.content{font-size:1em;orphans:3;widows:3}
 h2,h3,#toctitle,.sidebarblock>.content>.title{page-break-after:avoid}
 #toc,.sidebarblock,.exampleblock>.content{background:none!important}
-#toc{border-bottom:1px solid #ddddd8!important;padding-bottom:0!important}
-.sect1{padding-bottom:0!important}
-.sect1+.sect1{border:0!important}
-#header>h1:first-child{margin-top:1.25rem}
+#toc{border-bottom:1px solid #dddddf!important;padding-bottom:0!important}
 body.book #header{text-align:center}
-body.book #header>h1:first-child{border:0!important;margin:2.5em 0 1em 0}
+body.book #header>h1:first-child{border:0!important;margin:2.5em 0 1em}
 body.book #header .details{border:0!important;display:block;padding:0!important}
 body.book #header .details span:first-child{margin-left:0!important}
 body.book #header .details br{display:block}
-body.book #header .details br+span:before{content:none!important}
+body.book #header .details br+span::before{content:none!important}
 body.book #toc{border:0!important;text-align:left!important;padding:0!important;margin:0!important}
 body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-break-before:always}
-.listingblock code[data-lang]:before{display:block}
-#footer{background:none!important;padding:0 .9375em}
-#footer-text{color:rgba(0,0,0,.6)!important;font-size:.9em}
+.listingblock code[data-lang]::before{display:block}
+#footer{padding:0 .9375em}
 .hide-on-print{display:none!important}
 .print-only{display:block!important}
 .hide-for-print{display:none!important}
 .show-for-print{display:inherit!important}}
+@media print,amzn-kf8{#header>h1:first-child{margin-top:1.25rem}
+.sect1{padding:0!important}
+.sect1+.sect1{border:0}
+#footer{background:none}
+#footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
+@media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body class="book toc2 toc-right">
 <div id="header">
@@ -429,23 +447,33 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toctitle">Tabla de contenidos</div>
 <ul class="sectlevel1">
 <li><a href="#trueresumen">Resumen</a></li>
-<li><a href="#trueintroducci-n">1. Introducción</a></li>
-<li><a href="#trueconfiguraci-n-de-pulumi">2. Configuración de Pulumi</a></li>
+<li><a href="#trueintroducción">1. Introducción</a></li>
+<li><a href="#trueconfiguración-de-pulumi">2. Configuración de Pulumi</a></li>
 <li><a href="#trueflujo-de-trabajo-con-pulumi">3. Flujo de trabajo con Pulumi</a></li>
-<li><a href="#truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack">4. Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</a>
+<li><a href="#truecaso-de-uso-creación-de-una-máquina-virtual-configurada-con-rancher-en-openstack">4. Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</a>
 <ul class="sectlevel2">
 <li><a href="#truerecursos-del-paquete-pulumi-para-openstack">4.1. Recursos del paquete Pulumi para OpenStack</a></li>
 <li><a href="#truedescarga-de-las-credenciales-del-proyecto-openstack">4.2. Descarga de las credenciales del proyecto OpenStack</a></li>
-<li><a href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto">4.3. Creación y configuración inicial del proyecto</a></li>
-<li><a href="#trueconfiguraci-n-de-las-reglas-de-seguridad">4.4. Configuración de las reglas de seguridad</a></li>
-<li><a href="#truecreaci-n-de-la-instancia">4.5. Creación de la instancia</a></li>
-<li><a href="#trueasignaci-n-de-ip-flotante">4.6. Asignación de IP flotante</a></li>
-<li><a href="#truescript-de-inicializaci-n-de-rancher">4.7. Script de inicialización de Rancher</a></li>
-<li><a href="#truereorganizaci-n-del-c-digo">4.8. Reorganización del código</a></li>
+<li><a href="#truecreación-y-configuración-inicial-del-proyecto">4.3. Creación y configuración inicial del proyecto</a></li>
+<li><a href="#trueconfiguración-de-las-reglas-de-seguridad">4.4. Configuración de las reglas de seguridad</a></li>
+<li><a href="#truecreación-de-la-instancia">4.5. Creación de la instancia</a></li>
+<li><a href="#trueasignación-de-ip-flotante">4.6. Asignación de IP flotante</a></li>
+<li><a href="#truescript-de-inicialización-de-rancher">4.7. Script de inicialización de Rancher</a></li>
+<li><a href="#truereorganización-del-código">4.8. Reorganización del código</a></li>
 </ul>
 </li>
-<li><a href="#trueto-do">5. To-Do</a></li>
-<li><a href="#trueeliminaci-n-de-un-proyecto">6. Eliminación de un proyecto</a></li>
+<li><a href="#truecaso-de-uso-creación-de-clusters-kubernetes-con-rancher-y-openstack-como-proveedor-de-infraestructura">5. Caso de uso. Creación de clusters Kubernetes con Rancher y OpenStack como proveedor de infraestructura</a>
+<ul class="sectlevel2">
+<li><a href="#truegeneración-de-las-credenciales-de-la-api-de-rancher">5.1. Generación de las credenciales de la API de Rancher</a></li>
+<li><a href="#truecreación-y-configuración-inicial-del-proyecto-2">5.2. Creación y configuración inicial del proyecto</a></li>
+<li><a href="#trueinstalación-del-paquete-rancher2">5.3. Instalación del paquete Rancher2</a></li>
+<li><a href="#trueconfiguración-de-credenciales-de-acceso-a-rancher-desde-pulumi">5.4. Configuración de credenciales de acceso a Rancher desde Pulumi</a></li>
+<li><a href="#truecreación-de-las-plantillas-de-los-nodos">5.5. Creación de las plantillas de los nodos</a></li>
+<li><a href="#truecreación-del-cluster">5.6. Creación del cluster</a></li>
+<li><a href="#truecreación-de-los-pools-de-nodos-del-cluster">5.7. Creación de los pools de nodos del cluster</a></li>
+</ul>
+</li>
+<li><a href="#trueeliminación-de-un-proyecto">6. Eliminación de un proyecto</a></li>
 </ul>
 </div>
 </div>
@@ -454,7 +482,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="imageblock">
 <div class="content">
-<img src="./images/logocloudstic.png" alt="logocloudstic.png">
+<img src="./images/logocloudstic.png" alt="logocloudstic">
 </div>
 </div>
 </div>
@@ -499,7 +527,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect1">
-<h2 id="trueintroducci-n"><a class="anchor" href="#trueintroducci-n"></a>1. Introducción</h2>
+<h2 id="trueintroducción"><a class="anchor" href="#trueintroducción"></a>1. Introducción</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>La Infraestructura como código (IaC, Infrastructure as Code) permite la definición y mantenimiento de la infraestructura mediante código. Esto permite la automatización de la creación de la infraestructura en lugar de hacerlo manualmente. Se trata de un proceso declarativo en el que mediante una serie de archivos se especifica de forma declarativa la infraestructura y la configuración que se necesita (p.e. un entorno de backend formado por un volumen de almacenamiento, una máquina virtual con MySQL instalado y conectada al volumen creado, una máquina virtual con un framework instalado como Express, la configuración de red y de grupos de seguridad, &#8230;&#8203;.). De esta forma se evita tener que preparar manualmente las máquinas virtuales, sistemas operativos, almacenamiento y configuración, obteniéndose en su lugar la definición de un entorno que garantiza ser repetible, replicable, documentando las especificaciones y evitando la práctica de realización de cambios sobre la marcha y que no queden documentados. Con IaC, los cambios se hacen sobre el código y se aplican ejecutando el código desarrollado, en lugar de hacerlos en caliente mediante comandos sobre la infraestructura. Además, la combinación de IaC con la práctica de control de versiones permitirá, como en cualquier otro desarrollo software, llevar un control de cada uno de los cambios introducidos en la configuración de la infraestructura.</p>
@@ -533,7 +561,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect1">
-<h2 id="trueconfiguraci-n-de-pulumi"><a class="anchor" href="#trueconfiguraci-n-de-pulumi"></a>2. Configuración de Pulumi</h2>
+<h2 id="trueconfiguración-de-pulumi"><a class="anchor" href="#trueconfiguración-de-pulumi"></a>2. Configuración de Pulumi</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>La instalación la haremos siguiendo la <a href="https://www.pulumi.com/docs/get-started/install/">guía oficial de instalación</a>.</p>
@@ -556,7 +584,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash" data-lang="bash">$ pulumi version
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">$ pulumi version
 v3.7.0</code></pre>
 </div>
 </div>
@@ -569,7 +597,7 @@ v3.7.0</code></pre>
 <p>El flujo de trabajo habitual en Pulumi consiste en la creación del proyecto, codificación de la infraestuctura inicial, despliegue de cambios. Sin embargo, no se trata de un proceso secuencial, sino que en realidad, tras la creación del proyecto se entra en un ciclo iterativo de codificación de infraestructura y despliegue de cambios.</p>
 </div>
 <div class="paragraph">
-<p>El proyecto se crea con el comando <code>pulumi new</code> y normalmente le pasaremos una plantilla como argumento. En la plantilla se configura la plataforma con la que vamos a trabajar (proveedor cloud, base de datos, &#8230;&#8203;) y el lenguaje de programación que vamos a utilizar para codificar la infraestructura. Esto lo veremos en el apartado <a href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto">Creación y configuración inicial del proyecto</a>.</p>
+<p>El proyecto se crea con el comando <code>pulumi new</code> y normalmente le pasaremos una plantilla como argumento. En la plantilla se configura la plataforma con la que vamos a trabajar (proveedor cloud, base de datos, &#8230;&#8203;) y el lenguaje de programación que vamos a utilizar para codificar la infraestructura. Esto lo veremos en el apartado <a href="#truecreación-y-configuración-inicial-del-proyecto">Creación y configuración inicial del proyecto</a>.</p>
 </div>
 <div class="paragraph">
 <p>Los cambios introducidos en el ciclo de desarrollo con Pulumi pueden deberse bien a la creación de código para nuevos recursos, bien a la modificación o eliminación del código de recursos creados previamente. La forma de llevar a cabo estos cambios siempre es con <code>pulumi up</code>. Tras confirmar la acción de despliegue, los cambios se trasladarán a la infraestructura y Pulumi guardará <em>el estado del despliegue</em>, que consiste en anotar cada uno de los recursos configurados.</p>
@@ -597,7 +625,7 @@ v3.7.0</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack"><a class="anchor" href="#truecaso-de-uso-creaci-n-de-una-m-quina-virtual-configurada-con-rancher-en-openstack"></a>4. Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</h2>
+<h2 id="truecaso-de-uso-creación-de-una-máquina-virtual-configurada-con-rancher-en-openstack"><a class="anchor" href="#truecaso-de-uso-creación-de-una-máquina-virtual-configurada-con-rancher-en-openstack"></a>4. Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>El caso de uso que estudiaremos parte de un proyecto OpenStack creado previamente. En dicho proyecto se configurarán mediante Pulumi los grupos de seguridad, se creará una instancia que se aprovisionará durante su inicio con Rancher y se finalizará asignándole una dirección IP flotante.</p>
@@ -642,13 +670,13 @@ v3.7.0</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="truecreaci-n-y-configuraci-n-inicial-del-proyecto"><a class="anchor" href="#truecreaci-n-y-configuraci-n-inicial-del-proyecto"></a>4.3. Creación y configuración inicial del proyecto</h3>
+<h3 id="truecreación-y-configuración-inicial-del-proyecto"><a class="anchor" href="#truecreación-y-configuración-inicial-del-proyecto"></a>4.3. Creación y configuración inicial del proyecto</h3>
 <div class="paragraph">
 <p>Desde dentro de un directorio vacío creado para el proyecto crearemos el proyecto Pulumi con el comando <code>pulumi new</code>. Si no indicamos nada más, habrá que seleccionar el tipo de proyecto eligiendo tanto la plataforma como el lenguaje. A esta combinación de tipo de proyecto (AWS, Azure, Google Cloud, Kubernetes, Linode, OpenStack) y lenguaje (Go, JavaScript, TypeScript, Python, C#) se le conoce como plantilla. Una forma más rápida es pasar el parámetro de configuración de la plantilla directamente al crear el proyecto</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash" data-lang="bash">$ pulumi new openstack-typescript <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">$ pulumi new openstack-typescript <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -697,7 +725,7 @@ v3.7.0</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code>├── .gitignore
+<pre class="highlightjs highlight"><code class="language-none hljs">├── .gitignore
 ├── index.ts <i class="conum" data-value="1"></i><b>(1)</b>
 ├── package.json <i class="conum" data-value="2"></i><b>(2)</b>
 ├── Pulumi.yaml <i class="conum" data-value="3"></i><b>(3)</b>
@@ -728,7 +756,7 @@ v3.7.0</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">...
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">...
 import * as os from "@pulumi/openstack"; <i class="conum" data-value="1"></i><b>(1)</b>
 
 const instance = new os.compute.Instance("test", { <i class="conum" data-value="2"></i><b>(2)</b>
@@ -773,7 +801,7 @@ const instance = new os.compute.Instance("test", { <i class="conum" data-value="
 </div>
 </div>
 <div class="sect2">
-<h3 id="trueconfiguraci-n-de-las-reglas-de-seguridad"><a class="anchor" href="#trueconfiguraci-n-de-las-reglas-de-seguridad"></a>4.4. Configuración de las reglas de seguridad</h3>
+<h3 id="trueconfiguración-de-las-reglas-de-seguridad"><a class="anchor" href="#trueconfiguración-de-las-reglas-de-seguridad"></a>4.4. Configuración de las reglas de seguridad</h3>
 <div class="paragraph">
 <p>Las reglas de seguridad configuran el cortafuegos del proyecto de OpenStack. Para el ejemplo que nos ocupa, Rancher necesita inicialmente que estén abiertos los puertos TCP 80 y 443 para el tráfico HTTP (HTTP y HTTPS). Para implementarlo podemos incluir estas dos reglas de seguridad en el grupo <code>default</code> del proyecto o crear un grupo de seguridad específico para estas dos reglas. Posteriormente, al configurar la instancia se le aplicaría el grupo de seguridad <code>default</code> o el grupo específico creado para las reglas HTTP. En este ejemplo optamos por crear un grupo de seguridad específico.</p>
 </div>
@@ -792,13 +820,13 @@ const instance = new os.compute.Instance("test", { <i class="conum" data-value="
 </table>
 </div>
 <div class="sect3">
-<h4 id="truecreaci-n-de-un-grupo-de-seguridad"><a class="anchor" href="#truecreaci-n-de-un-grupo-de-seguridad"></a>4.4.1. Creación de un grupo de seguridad</h4>
+<h4 id="truecreación-de-un-grupo-de-seguridad"><a class="anchor" href="#truecreación-de-un-grupo-de-seguridad"></a>4.4.1. Creación de un grupo de seguridad</h4>
 <div class="paragraph">
 <p>Los grupos de seguridad se crean con el recurso <code>SecGroup</code> del módulo <code>networking</code>. Basta con indicar un nombre para el grupo de seguridad y un JSON para las opciones. En nuestro caso incluiremos la descripción del grupo de seguridad.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">const webSecGroup = new os.networking.SecGroup("web", {
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">const webSecGroup = new os.networking.SecGroup("web", {
 	description: "Web security group"
 })</code></pre>
 </div>
@@ -808,13 +836,13 @@ const instance = new os.compute.Instance("test", { <i class="conum" data-value="
 </div>
 </div>
 <div class="sect3">
-<h4 id="truea-adir-reglas-de-seguridad"><a class="anchor" href="#truea-adir-reglas-de-seguridad"></a>4.4.2. Añadir reglas de seguridad</h4>
+<h4 id="trueañadir-reglas-de-seguridad"><a class="anchor" href="#trueañadir-reglas-de-seguridad"></a>4.4.2. Añadir reglas de seguridad</h4>
 <div class="paragraph">
 <p>Las reglas de seguridad se añaden a los grupos de seguridad creando un recurso <code>SecGroupRule</code> del módulo <code>networking</code>. Se trata de indicar un nombre para la reglas de seguridad y un JSON para las opciones. En nuestro caso incluiremos una descripción, dirección, si es IPv4 o IPv6, el puerto abierto (definido como un rango), el protocolo, las direcciones IP remotas a las que se les da acceso y el grupo de seguridad al que se asigna la regla creada</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">const web80 = new os.networking.SecGroupRule("web80", {
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">const web80 = new os.networking.SecGroupRule("web80", {
 	description: "HTTP",
     direction: "ingress",
     ethertype: "IPv4",
@@ -851,7 +879,7 @@ const web443 = new os.networking.SecGroupRule("web443", {
 </div>
 </div>
 <div class="sect3">
-<h4 id="truedespliegue-de-la-configuraci-n-de-seguridad"><a class="anchor" href="#truedespliegue-de-la-configuraci-n-de-seguridad"></a>4.4.3. Despliegue de la configuración de seguridad</h4>
+<h4 id="truedespliegue-de-la-configuración-de-seguridad"><a class="anchor" href="#truedespliegue-de-la-configuración-de-seguridad"></a>4.4.3. Despliegue de la configuración de seguridad</h4>
 <div class="paragraph">
 <p>La configuración de seguridad completa para un entorno con Rancher y Kubernetes residiendo en el mismo proyecto OpenStack incluye una gran variedad de grupos y reglas de seguridad. La documentación oficial de Rancher especifica la <a href="https://rancher.com/docs/rancher/v2.x/en/installation/requirements/ports/#ports-for-rancher-launched-kubernetes-clusters-using-node-pools">lista de puertos a abrir</a> para cada componente.</p>
 </div>
@@ -863,7 +891,7 @@ const web443 = new os.networking.SecGroupRule("web443", {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">import * as os from "@pulumi/openstack";
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">import * as os from "@pulumi/openstack";
 
 const cidr = '192.168.129.0/24' <i class="conum" data-value="1"></i><b>(1)</b>
 
@@ -972,7 +1000,7 @@ const web443 = new os.networking.SecGroupRule("web443", {
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/grupos-de-seguridad.png" alt="grupos de seguridad.png">
+<img src="./images/grupos-de-seguridad.png" alt="grupos de seguridad">
 </div>
 </div>
 <div class="paragraph">
@@ -980,25 +1008,25 @@ const web443 = new os.networking.SecGroupRule("web443", {
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/reglas-de-seguridad-web.png" alt="reglas de seguridad web.png">
+<img src="./images/reglas-de-seguridad-web.png" alt="reglas de seguridad web">
 </div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="truecreaci-n-de-la-instancia"><a class="anchor" href="#truecreaci-n-de-la-instancia"></a>4.5. Creación de la instancia</h3>
+<h3 id="truecreación-de-la-instancia"><a class="anchor" href="#truecreación-de-la-instancia"></a>4.5. Creación de la instancia</h3>
 <div class="paragraph">
 <p>Tras definir los grupos de seguridad aplicables a la instancia continuamos ahora con la creación de un recurso de instancia en OpenStack, lo que nos permitirá tener una máquina virtual desplegada con código mediante Pulumi.</p>
 </div>
 <div class="paragraph">
-<p>Las instancias de OpenStack en Pulumi se crean con el recurso <code>Instance</code> del módulo <code>compute</code>. Basta con indicar un nombre para la instancia y un JSON para las opciones. En nuestro caso incluiremos la zona de disponibilidad, el nombre de la imagen tal y como está definida en OpenStack, el nombre del <em>flavour</em> o sabor a utilizar para crear la instancia, las redes a las que se conectará la instancia, el nombre del par de claves a inyectar en la instancia y los grupos de seguridad que controlan el acceso a la instancia. Además, incluiremos un script de inicialización de la instancia en su creación (lo que se conoce como <em>user data</em> en otros sistemas). En la sección <a href="#truescript-de-inicializaci-n-de-rancher">Script de inicialización de Rancher</a> se aportan los detalles de este script. Este script instalará Docker en la máquina virtual y ejecutará Rancher con Docker.</p>
+<p>Las instancias de OpenStack en Pulumi se crean con el recurso <code>Instance</code> del módulo <code>compute</code>. Basta con indicar un nombre para la instancia y un JSON para las opciones. En nuestro caso incluiremos la zona de disponibilidad, el nombre de la imagen tal y como está definida en OpenStack, el nombre del <em>flavour</em> o sabor a utilizar para crear la instancia, las redes a las que se conectará la instancia, el nombre del par de claves a inyectar en la instancia y los grupos de seguridad que controlan el acceso a la instancia. Además, incluiremos un script de inicialización de la instancia en su creación (lo que se conoce como <em>user data</em> en otros sistemas). En la sección <a href="#truescript-de-inicialización-de-rancher">Script de inicialización de Rancher</a> se aportan los detalles de este script. Este script instalará Docker en la máquina virtual y ejecutará Rancher con Docker.</p>
 </div>
 <div class="paragraph">
 <p>El fragmento siguiente ilustra el código para la creación de una instancia en el archivo <code>index.ts</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">import * as os from "@pulumi/openstack";
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">import * as os from "@pulumi/openstack";
 
 const fs = require('fs') <i class="conum" data-value="1"></i><b>(1)</b>
 ...
@@ -1043,12 +1071,12 @@ const rancherInstance = new os.compute.Instance("rancher-sistemas-prod", {
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/instancia-creada.png" alt="instancia creada.png">
+<img src="./images/instancia-creada.png" alt="instancia creada">
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="trueasignaci-n-de-ip-flotante"><a class="anchor" href="#trueasignaci-n-de-ip-flotante"></a>4.6. Asignación de IP flotante</h3>
+<h3 id="trueasignación-de-ip-flotante"><a class="anchor" href="#trueasignación-de-ip-flotante"></a>4.6. Asignación de IP flotante</h3>
 <div class="paragraph">
 <p>Para poder acceder a la instancia desde el exterior le asignaremos una dirección IP flotante. En nuestro caso ya tenemos la dirección IP flotante adjudicada al proyecto y está registrada en un DNS para poder realizar una instalación de Rancher con nombre DNS. Por tanto, no será necesario crear la dirección IP flotante en el proyecto, sino que pasaremos directamente al paso de asignar dicha dirección IP flotante a la instancia. No obstante, también veremos cómo sería el script si hubiese que crear la dirección IP flotante.</p>
 </div>
@@ -1060,7 +1088,7 @@ const rancherInstance = new os.compute.Instance("rancher-sistemas-prod", {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">...
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">...
 const floatingIP = '192.168.129.1' <i class="conum" data-value="1"></i><b>(1)</b>
 ...
 // Associate a floating IP to the instance
@@ -1095,7 +1123,7 @@ const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/ip-flotante-asignada.png" alt="ip flotante asignada.png">
+<img src="./images/ip-flotante-asignada.png" alt="ip flotante asignada">
 </div>
 </div>
 <div class="paragraph">
@@ -1103,7 +1131,7 @@ const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/instancia-configurada.png" alt="instancia configurada.png">
+<img src="./images/instancia-configurada.png" alt="instancia configurada">
 </div>
 </div>
 <div class="sidebarblock">
@@ -1117,7 +1145,7 @@ const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">...
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">...
 const rancherFloatingIp = new openstack.networking.FloatingIp("rancherFloatingIP", {
     pool: "ual-net",
 });
@@ -1129,7 +1157,7 @@ const rancherFloatingIp = new openstack.networking.FloatingIp("rancherFloatingIP
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">...
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">...
 // Associate a floating IP to the instance
 const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
     floatingIp: rancherFloatingIp.address, <i class="conum" data-value="1"></i><b>(1)</b>
@@ -1150,10 +1178,10 @@ const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
 </div>
 </div>
 <div class="sect2">
-<h3 id="truescript-de-inicializaci-n-de-rancher"><a class="anchor" href="#truescript-de-inicializaci-n-de-rancher"></a>4.7. Script de inicialización de Rancher</h3>
+<h3 id="truescript-de-inicialización-de-rancher"><a class="anchor" href="#truescript-de-inicialización-de-rancher"></a>4.7. Script de inicialización de Rancher</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash" data-lang="bash">#!/bin/bash
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">#!/bin/bash
 
 RANCHERPASSWORD='yourpasswordhere' <i class="conum" data-value="1"></i><b>(1)</b>
 RANCHERSERVER='https://your.url.here.com' <i class="conum" data-value="2"></i><b>(2)</b>
@@ -1290,7 +1318,7 @@ exit 0</code></pre>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/rancher.png" alt="rancher.png">
+<img src="./images/rancher.png" alt="rancher">
 </div>
 </div>
 <div class="paragraph">
@@ -1298,7 +1326,7 @@ exit 0</code></pre>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/driver-cinder.png" alt="driver cinder.png">
+<img src="./images/driver-cinder.png" alt="driver cinder">
 </div>
 </div>
 <div class="paragraph">
@@ -1306,21 +1334,21 @@ exit 0</code></pre>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/openstack-node-driver.png" alt="openstack node driver.png">
+<img src="./images/openstack-node-driver.png" alt="openstack node driver">
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="truereorganizaci-n-del-c-digo"><a class="anchor" href="#truereorganizaci-n-del-c-digo"></a>4.8. Reorganización del código</h3>
+<h3 id="truereorganización-del-código"><a class="anchor" href="#truereorganización-del-código"></a>4.8. Reorganización del código</h3>
 <div class="paragraph">
-<p>Hemos ido creando recursos poco a poco, comenzando con los grupos de seguridad para centrarnos posteriormente en la creación de la instancia. Actualmente tenemos toda la configuración de la infraestructura en un único archivo <code>index.ts</code>. A medida que incorporemos nuevos grupos de seguridad, nuevas reglas, nuevas instancias, el código se terminará haciendo inmanejable. Actualmente, el archivo <code>index.js</code> luce de esta manera.</p>
+<p>Hasta ahora hemos ido creando recursos poco a poco, comenzando con los grupos de seguridad para centrarnos posteriormente en la creación de la instancia. Actualmente tenemos toda la configuración de la infraestructura en un único archivo <code>index.ts</code>. A medida que incorporemos nuevos grupos de seguridad, nuevas reglas, nuevas instancias, el código de <code>index.ts</code> se terminará haciendo inmanejable. Actualmente, el archivo <code>index.js</code> luce de esta manera.</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 1. <code>index.ts</code> con todos los recursos juntos</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">import * as os from "@pulumi/openstack";
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">import * as os from "@pulumi/openstack";
 import * as sg from './security-groups'
 
 const cidr = '192.168.129.0/24'
@@ -1415,13 +1443,13 @@ const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
 <div class="ulist">
 <ul>
 <li>
-<p>Crear un archivo de variables (<code>values.ts</code>) en el que se configuran los valores de las variables a utilizar. En este ejemplo configuraremos el CIDR para permitir el acceso desde direcciones IP remotas y la dirección IP flotante que tenemos reservada para Rancher.</p>
+<p>Crear un archivo de variables (<code>values.ts</code>) en el que se configuren los valores de las variables a utilizar. En este ejemplo configuraremos por un lado el CIDR para permitir el acceso desde direcciones IP remotas y, por otro lado, la dirección IP flotante que tenemos reservada para Rancher.</p>
 </li>
 <li>
 <p>Separar la configuración de los grupos y reglas de seguridad en un archivo aparte (<code>security-groups.ts</code>)</p>
 </li>
 <li>
-<p>Mantener en <code>index.ts</code> sólo las configuración de la instancia de Rancher y la asignación a la IP flotante.</p>
+<p>Mantener en <code>index.ts</code> sólo la configuración de la instancia de Rancher y la asignación a la IP flotante.</p>
 </li>
 </ul>
 </div>
@@ -1433,7 +1461,7 @@ const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">const cidr = '192.168.129.0/24'
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">const cidr = '192.168.129.0/24'
 const floatingIP = '192.168.129.1'
 
 export {cidr, floatingIP} <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
@@ -1454,7 +1482,7 @@ export {cidr, floatingIP} <i class="conum" data-value="1"></i><b>(1)</b></code><
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">import * as os from "@pulumi/openstack";
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">import * as os from "@pulumi/openstack";
 import * as values from './values' <i class="conum" data-value="1"></i><b>(1)</b>
 
 // Create security group
@@ -1526,11 +1554,11 @@ export {webSecGroup, etcdSecGroup} <i class="conum" data-value="3"></i><b>(3)</b
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Uso de los parámetros del archivo de parámetros</td>
+<td>Uso de las constantes definidas en el archivo de parámetros</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Se exportan los grupos de seguridad para poder ser reutilizadas</td>
+<td>Se exportan los grupos de seguridad para poder ser reutilizados</td>
 </tr>
 </table>
 </div>
@@ -1541,7 +1569,7 @@ export {webSecGroup, etcdSecGroup} <i class="conum" data-value="3"></i><b>(3)</b
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-ts" data-lang="ts">import * as os from "@pulumi/openstack";
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">import * as os from "@pulumi/openstack";
 import * as values from './values' <i class="conum" data-value="1"></i><b>(1)</b>
 import * as sg from './security-groups' <i class="conum" data-value="2"></i><b>(2)</b>
 
@@ -1595,13 +1623,356 @@ const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
 </div>
 </div>
 <div class="sect1">
-<h2 id="trueto-do"><a class="anchor" href="#trueto-do"></a>5. To-Do</h2>
+<h2 id="truecaso-de-uso-creación-de-clusters-kubernetes-con-rancher-y-openstack-como-proveedor-de-infraestructura"><a class="anchor" href="#truecaso-de-uso-creación-de-clusters-kubernetes-con-rancher-y-openstack-como-proveedor-de-infraestructura"></a>5. Caso de uso. Creación de clusters Kubernetes con Rancher y OpenStack como proveedor de infraestructura</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>Pulumi cuenta con un paquete Rancher que permite la configuración de recursos Rancher. En este caso de uso partimos de una instalación previa de Rancher (ver <a href="#truecaso-de-uso-creación-de-una-máquina-virtual-configurada-con-rancher-en-openstack">Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack</a>). El objetivo será la creación de un cluster de Kubernetes usando Pulumi obteniendo un despliegue replicable y repetible en nuestro propósito de tener la infraestructura como código. La infraestructura del cluster de Kubernetes será ofrecida por un cloud OpenStack. Por tanto, deberemos comenzar con la creación de diferentes plantillas con las configuraciones necesarias de los recursos de los nodos del cluster (usaremos plantillas diferentes para los roles de control, base de datos etcd y los nodos worker). Una vez creadas las plantillas de los nodos procederemos a crear los nodos del cluster Kubernetes personalizados a la plantilla adecuada.</p>
+</div>
+<div class="sect2">
+<h3 id="truegeneración-de-las-credenciales-de-la-api-de-rancher"><a class="anchor" href="#truegeneración-de-las-credenciales-de-la-api-de-rancher"></a>5.1. Generación de las credenciales de la API de Rancher</h3>
+<div class="paragraph">
+<p>Para usar el paquete Rancher de Pulumi es necesario realizar un proceso de configuración de claves de la API de Rancher con el objetivo de poder crear y actualizar recursos de Rancher desde Pulumi. Las credenciales se obtendrán desde Rancher siguiendo estos pasos:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>En el menú desplegable de usuario seleccionar <code>API &amp; Keys</code>.</p>
+<div class="imageblock">
+<div class="content">
+<img src="./images/menu-api-keys.png" alt="menu api keys">
+</div>
+</div>
+</li>
+<li>
+<p>En la pantalla <code>API &amp; Keys</code> pulsar el botón <code>Add Key</code>.</p>
+</li>
+<li>
+<p>Dejar los valores predeterminados en el cuadro de diálogo.</p>
+<div class="imageblock">
+<div class="content">
+<img src="./images/add-api-key.png" alt="add api key">
+</div>
+</div>
+</li>
+<li>
+<p>Copiar los valores generados. Estos valores será la única vez que se muestran y no se podrán volver a recuperar.</p>
+<div class="imageblock">
+<div class="content">
+<img src="./images/api-key-created.png" alt="api key created">
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Si se pierden estas credenciales habrá que volver a generar otras nuevas ya que no se podrá recuperar la contraseña generada (secret key).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Una vez seguidos estos pasos habremos generado las credenciales de acceso para la interacción con Rancher a través de su API. Esto es lo que necesitábamos para poder gestionar recursos Rancher desde Pulumi.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="truecreación-y-configuración-inicial-del-proyecto-2"><a class="anchor" href="#truecreación-y-configuración-inicial-del-proyecto-2"></a>5.2. Creación y configuración inicial del proyecto</h3>
+<div class="paragraph">
+<p>Desde dentro de un directorio vacío creado para el proyecto crearemos el proyecto Pulumi con el comando <code>pulumi new</code>. Como no hay plantillas definidas para Rancher, crearemos el proyecto con</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">$ pulumi new typescript</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A continuación:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Aceptaremos el nombre del proyecto, cuyo valor predeterminado es el del directorio en el que se encuentra.</p>
+</li>
+<li>
+<p>Completaremos la descripción con <code>Configuración de cluster K8s</code>.</p>
+</li>
+<li>
+<p>Aceptaremos el nombre del stack (dev).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Una vez aceptadas las opciones de creación del proyecto se instalarán las dependencias del proyecto y unos instantes después el proyecto estará listo para ejecutarse.</p>
+</div>
+<div class="paragraph">
+<p>Como resultado tendremos un proyecto con la estructura siguiente:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">├── .gitignore
+├── index.ts <i class="conum" data-value="1"></i><b>(1)</b>
+├── package.json <i class="conum" data-value="2"></i><b>(2)</b>
+├── Pulumi.yaml <i class="conum" data-value="3"></i><b>(3)</b>
+└── tsconfig.json</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Archivo donde incluiremos los recursos a desplegar.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Archivo de dependencias.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Configuración del nombre y descripción del proyecto y runtime de ejecución</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="trueinstalación-del-paquete-rancher2"><a class="anchor" href="#trueinstalación-del-paquete-rancher2"></a>5.3. Instalación del paquete Rancher2</h3>
+<div class="paragraph">
+<p>Instalaremos el paquete Rancher2 para Pulumi con el comando</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">npm install @pulumi/rancher2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Esto actualizará el archivo de dependencias <code>package.json</code> del proyecto.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="trueconfiguración-de-credenciales-de-acceso-a-rancher-desde-pulumi"><a class="anchor" href="#trueconfiguración-de-credenciales-de-acceso-a-rancher-desde-pulumi"></a>5.4. Configuración de credenciales de acceso a Rancher desde Pulumi</h3>
+<div class="paragraph">
+<p>Con los valores obtenidos en <a href="#truegeneración-de-las-credenciales-de-la-api-de-rancher">Generación de las credenciales de la API de Rancher</a> hay que pasarlos a Pulumi. Siguiendo los <a href="https://www.pulumi.com/docs/intro/cloud-providers/rancher2/setup/">pasos de configuración de credenciales de Rancher en Pulumi</a> hay dos opciones:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Configurar las variables de entorno <code>RANCHER_URL</code>, <code>RANCHER_ACCESS_KEY</code> y <code>RANCHER_SECRET_KEY</code>. En nuestro caso sería</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">export RANCHER_URL=https://ranchitodesa.stic.ual.es/v3
+export RANCHER_ACCESS_KEY=token-tj6vf
+export RANCHER_SECRET_KEY=8pq6g2dpf7njgmncglqrsfggrbwx57.........</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Establecer la configuración en el stack del proyecto para facilitar el trabajo colaborativo.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">$ pulumi config set rancher2:apiUrl https://ranchitodesa.stic.ual.es/v3
+$ pulumi config set rancher2:accessKey token-tj6vf --secret
+$ pulumi config set rancher2:secretKey 8pq6g2dpf7njgmncglqrsfggrbwx57......... --secret</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Las credenciales configuradas no son enviadas a pulumi.com.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Si seguimos esta alternativa, tras hacer esta configuración se genera un archivo <code>Pulumi.dev.yaml</code> con la configuración realizada. <strong>Por motivos de seguridad, no se deberá enviar esta información de forma indiscriminada a repositorios públicos</strong></p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="truecreación-de-las-plantillas-de-los-nodos"><a class="anchor" href="#truecreación-de-las-plantillas-de-los-nodos"></a>5.5. Creación de las plantillas de los nodos</h3>
+<div class="paragraph">
+<p>Como el cluster de Kubernetes que vamos a crear usa OpenStack como proveedor de infraestructura y cada instalación particular tiene sus propios valores, hay que crear una plantilla en la que se indiquen todos estos parámetros particulares, desde la URL, credenciales de acceso, y demás, hasta los datos particulares del proyecto del que se van a consumir los recursos, pasando por los datos de la imagen a utilizar para los nodos que usen la plantilla.</p>
+</div>
+<div class="paragraph">
+<p>Las plantillas se crean con el recurso <code>NodeTemplate</code> del módulo <code>rancher2</code>. Basta con indicar un nombre para la plantilla y un JSON para las opciones. En nuestro caso incluiremos la descripción de la plantilla.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">const sistemas_ssh_key = fs.readFileSync('/Users/manolo/.ssh/os-sistemas','utf8');
+
+// Create a new rancher2 Large Ubuntu Node Template up to Rancher 2.1.x
+
+const ubuntuLargeTemplate = new rancher2.NodeTemplate("ubuntu-18-04-large-pulumi", {
+    openstackConfig: {
+        authUrl: "http://openstack.stic.ual.es:5000/v3", <i class="conum" data-value="1"></i><b>(1)</b>
+        availabilityZone: "nova", <i class="conum" data-value="2"></i><b>(2)</b>
+        domainName: "default", <i class="conum" data-value="3"></i><b>(3)</b>
+        endpointType: "publicURL",
+        flavorName: "large", <i class="conum" data-value="4"></i><b>(4)</b>
+        floatingIpPool: "ual-net", <i class="conum" data-value="5"></i><b>(5)</b>
+        imageName: "Ubuntu 18.04 LTS", <i class="conum" data-value="6"></i><b>(6)</b>
+        keypairName: "os-sistemas", <i class="conum" data-value="7"></i><b>(7)</b>
+        netName: "Sistemas-prod-net", <i class="conum" data-value="8"></i><b>(8)</b>
+        password: "xxxx", <i class="conum" data-value="9"></i><b>(9)</b>
+        privateKeyFile: fs.readFileSync('/Users/manolo/.ssh/os-sistemas', 'utf8'), <i class="conum" data-value="10"></i><b>(10)</b>
+        region: "RegionOne", <i class="conum" data-value="11"></i><b>(11)</b>
+        secGroups: "default", <i class="conum" data-value="12"></i><b>(12)</b>
+        sshPort: "22", <i class="conum" data-value="13"></i><b>(13)</b>
+        sshUser: "ubuntu", <i class="conum" data-value="14"></i><b>(14)</b>
+        tenantName: "Sistemas-prod", <i class="conum" data-value="15"></i><b>(15)</b>
+        username: "sistemas", <i class="conum" data-value="16"></i><b>(16)</b>
+        userDataFile: fs.readFileSync('./ubuntu-node-setup.sh', 'utf8') <i class="conum" data-value="17"></i><b>(17)</b>
+    },
+    description: "Ubuntu 18.04 LTS large Pulumi",
+});</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>URL de autenticación de la instalación particular de OpenStack</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Nombre de la zona de disponibilidad</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Nombre del dominio OpenStack</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Nombre del sabor para las instancias que usen esta plantilla</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Nombre de la red externa que propociona las direcciones IP flotantes a las instancias que usen esta plantilla</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Nombre de la imagen a usar como base para las instancias que usen esta plantilla</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>Nombre del archivo de clave pública del usuario OpenStack para inyectar en las instancias que usen esta plantilla</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>Red del proyecto OpenStack a la que se conectarán las instancias que usen esta plantilla</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>Contraseña del usuario OpenStack</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="10"></i><b>10</b></td>
+<td>Ubicación del archivo de clave privada para poder interactuar con la instancia. Otra opción (menos segura) es pasar el contenido del archivo de clave privada.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="11"></i><b>11</b></td>
+<td>Región OpenStack</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="12"></i><b>12</b></td>
+<td>Grupos de seguridad OpenStack aplicables a la instancia</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="13"></i><b>13</b></td>
+<td>Puerto de acceso SSH a la instancia creada</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="14"></i><b>14</b></td>
+<td>Nombre de usuario SSH de la imagen de sistema operativo utilizada en los nodos del cluster de Kubernetes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="15"></i><b>15</b></td>
+<td>Nombre del proyecto que propociona los recursos al cluster de Kubernetes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="16"></i><b>16</b></td>
+<td>Nombre de usuario OpenStack propietario del proyecto que propociona los recursos al cluster de Kubernetes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="17"></i><b>17</b></td>
+<td>Opción de pasar un script para configurar la instancia (p.e. para hacer una configuración particular de seguridad de nuestra organización)</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Esto define una plantilla asignada a una constante <code>ubuntuLargeTemplate</code>. Asignar el recurso creado a una constante o una variable permite manipularlo posteriormente. En nuestro caso se usará para la crear nodos del cluster de Kubernetes.</p>
+</div>
+<div class="paragraph">
+<p>Análogamente crearemos una plantilla similar pero con un sabor <code>medium</code> para nodos que necesiten menos recursos.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">// Create a new rancher2 Medium Ubuntu Node Template up to Rancher 2.1.x
+
+const ubuntuMediumTemplate = new rancher2.NodeTemplate("ubuntu-18-04-medium-pulumi", {
+    openstackConfig: {
+        authUrl: "http://openstack.stic.ual.es:5000/v3",
+        availabilityZone: "nova",
+        domainName: "default",
+        endpointType: "publicURL",
+        flavorName: "medium", <i class="conum" data-value="1"></i><b>(1)</b>
+        floatingIpPool: "ual-net",
+        imageName: "Ubuntu 18.04 LTS",
+        keypairName: "os-sistemas",
+        netName: "Sistemas-prod-net",
+        password: "xxxx",
+        privateKeyFile: fs.readFileSync('/Users/manolo/.ssh/os-sistemas', 'utf8'),
+        region: "RegionOne",
+        secGroups: "default",
+        sshPort: "22",
+        sshUser: "ubuntu",
+        tenantName: "Sistemas-prod",
+        username: "sistemas",
+        userDataFile: fs.readFileSync('./ubuntu-node-setup.sh', 'utf8')
+
+    },
+    description: "Ubuntu 18.04 LTS medium Pulumi",
+});</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Sabor <code>medium</code> para nodos menos exigentes</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="truecreación-del-cluster"><a class="anchor" href="#truecreación-del-cluster"></a>5.6. Creación del cluster</h3>
+
+</div>
+<div class="sect2">
+<h3 id="truecreación-de-los-pools-de-nodos-del-cluster"><a class="anchor" href="#truecreación-de-los-pools-de-nodos-del-cluster"></a>5.7. Creación de los pools de nodos del cluster</h3>
 
 </div>
 </div>
+</div>
 <div class="sect1">
-<h2 id="trueeliminaci-n-de-un-proyecto"><a class="anchor" href="#trueeliminaci-n-de-un-proyecto"></a>6. Eliminación de un proyecto</h2>
+<h2 id="trueeliminación-de-un-proyecto"><a class="anchor" href="#trueeliminación-de-un-proyecto"></a>6. Eliminación de un proyecto</h2>
 <div class="sectionbody">
 <div class="admonitionblock note">
 <table>
@@ -1623,11 +1994,11 @@ If you want to remove the stack completely, run 'pulumi stack rm dev'.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-23 01:02:44 CEST
+Last updated 2021-07-26 21:38:31 +0200
 </div>
 </div>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/styles/github.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
 <script>hljs.initHighlighting()</script>
 </body>
 </html>

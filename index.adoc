@@ -542,7 +542,7 @@ image::openstack-node-driver.png[]
 
 ### Reorganización del código
 
-Hemos ido creando recursos poco a poco, comenzando con los grupos de seguridad para centrarnos posteriormente en la creación de la instancia. Actualmente tenemos toda la configuración de la infraestructura en un único archivo `index.ts`. A medida que incorporemos nuevos grupos de seguridad, nuevas reglas, nuevas instancias, el código se terminará haciendo inmanejable. Actualmente, el archivo `index.js` luce de esta manera.
+Hasta ahora hemos ido creando recursos poco a poco, comenzando con los grupos de seguridad para centrarnos posteriormente en la creación de la instancia. Actualmente tenemos toda la configuración de la infraestructura en un único archivo `index.ts`. A medida que incorporemos nuevos grupos de seguridad, nuevas reglas, nuevas instancias, el código de `index.ts` se terminará haciendo inmanejable. Actualmente, el archivo `index.js` luce de esta manera.
 
 .`index.ts` con todos los recursos juntos
 ====
@@ -639,9 +639,9 @@ const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
 
 La refactorización que se propone consiste en:
 
-* Crear un archivo de variables (`values.ts`) en el que se configuran los valores de las variables a utilizar. En este ejemplo configuraremos el CIDR para permitir el acceso desde direcciones IP remotas y la dirección IP flotante que tenemos reservada para Rancher.
+* Crear un archivo de variables (`values.ts`) en el que se configuren los valores de las variables a utilizar. En este ejemplo configuraremos por un lado el CIDR para permitir el acceso desde direcciones IP remotas y, por otro lado, la dirección IP flotante que tenemos reservada para Rancher.
 * Separar la configuración de los grupos y reglas de seguridad en un archivo aparte (`security-groups.ts`)
-* Mantener en `index.ts` sólo las configuración de la instancia de Rancher y la asignación a la IP flotante.
+* Mantener en `index.ts` sólo la configuración de la instancia de Rancher y la asignación a la IP flotante.
 
 A continuación se muestra el código de cada uno de estos archivos tras la refactorización.
 
@@ -725,8 +725,8 @@ const web443 = new os.networking.SecGroupRule("web443", {
 export {webSecGroup, etcdSecGroup} <3>
 ----
 <1> Importación del archivo de parámetros y configuración del prefijo `values` para usar los objetos que ha exportado
-<2> Uso de los parámetros del archivo de parámetros
-<3> Se exportan los grupos de seguridad para poder ser reutilizadas
+<2> Uso de las constantes definidas en el archivo de parámetros
+<3> Se exportan los grupos de seguridad para poder ser reutilizados
 ====
 
 .`index.ts` con la configuración de la instancia del despliegue y la asignación de una IP flotante asignada previamente al proyecto
@@ -767,7 +767,204 @@ const fipFloatingIpAssociate = new os.compute.FloatingIpAssociate("fip", {
 <4> Uso de los parámetros del archivo de parámetros
 ====
 
-## To-Do
+## Caso de uso. Creación de clusters Kubernetes con Rancher y OpenStack como proveedor de infraestructura
+
+Pulumi cuenta con un paquete Rancher que permite la configuración de recursos Rancher. En este caso de uso partimos de una instalación previa de Rancher (ver <<Caso de uso. Creación de una máquina virtual configurada con Rancher en OpenStack>>). El objetivo será la creación de un cluster de Kubernetes usando Pulumi obteniendo un despliegue replicable y repetible en nuestro propósito de tener la infraestructura como código. La infraestructura del cluster de Kubernetes será ofrecida por un cloud OpenStack. Por tanto, deberemos comenzar con la creación de diferentes plantillas con las configuraciones necesarias de los recursos de los nodos del cluster (usaremos plantillas diferentes para los roles de control, base de datos etcd y los nodos worker). Una vez creadas las plantillas de los nodos procederemos a crear los nodos del cluster Kubernetes personalizados a la plantilla adecuada.
+
+### Generación de las credenciales de la API de Rancher
+
+Para usar el paquete Rancher de Pulumi es necesario realizar un proceso de configuración de claves de la API de Rancher con el objetivo de poder crear y actualizar recursos de Rancher desde Pulumi. Las credenciales se obtendrán desde Rancher siguiendo estos pasos:
+
+. En el menú desplegable de usuario seleccionar `API & Keys`.
+
++
+image::menu-api-keys.png[]
+
+. En la pantalla `API & Keys` pulsar el botón `Add Key`.
+. Dejar los valores predeterminados en el cuadro de diálogo. 
+
++
+image::add-api-key.png[]
+
+. Copiar los valores generados. Estos valores será la única vez que se muestran y no se podrán volver a recuperar.
+
++
+image::api-key-created.png[]
+
+[NOTE]
+====
+Si se pierden estas credenciales habrá que volver a generar otras nuevas ya que no se podrá recuperar la contraseña generada (secret key).
+====
+
+Una vez seguidos estos pasos habremos generado las credenciales de acceso para la interacción con Rancher a través de su API. Esto es lo que necesitábamos para poder gestionar recursos Rancher desde Pulumi.
+
+### Creación y configuración inicial del proyecto
+
+Desde dentro de un directorio vacío creado para el proyecto crearemos el proyecto Pulumi con el comando `pulumi new`. Como no hay plantillas definidas para Rancher, crearemos el proyecto con 
+
+[source,bash]
+----
+$ pulumi new typescript
+----
+
+A continuación:
+
+* Aceptaremos el nombre del proyecto, cuyo valor predeterminado es el del directorio en el que se encuentra.
+* Completaremos la descripción con `Configuración de cluster K8s`.
+* Aceptaremos el nombre del stack (dev).
+
+Una vez aceptadas las opciones de creación del proyecto se instalarán las dependencias del proyecto y unos instantes después el proyecto estará listo para ejecutarse.
+
+Como resultado tendremos un proyecto con la estructura siguiente:
+
+[source, bash]
+----
+├── .gitignore
+├── index.ts <1>
+├── package.json <2> 
+├── Pulumi.yaml <3>
+└── tsconfig.json
+----
+
+<1> Archivo donde incluiremos los recursos a desplegar. 
+<2> Archivo de dependencias.
+<3> Configuración del nombre y descripción del proyecto y runtime de ejecución
+
+### Instalación del paquete Rancher2
+
+Instalaremos el paquete Rancher2 para Pulumi con el comando
+
+[source, ts]
+----
+npm install @pulumi/rancher2
+----
+
+Esto actualizará el archivo de dependencias `package.json` del proyecto.
+
+### Configuración de credenciales de acceso a Rancher desde Pulumi 
+
+Con los valores obtenidos en <<Generación de las credenciales de la API de Rancher>> hay que pasarlos a Pulumi. Siguiendo los https://www.pulumi.com/docs/intro/cloud-providers/rancher2/setup/[pasos de configuración de credenciales de Rancher en Pulumi] hay dos opciones:
+
+* Configurar las variables de entorno `RANCHER_URL`, `RANCHER_ACCESS_KEY` y `RANCHER_SECRET_KEY`. En nuestro caso sería 
+
+[source, bash]
+----
+export RANCHER_URL=https://ranchitodesa.stic.ual.es/v3
+export RANCHER_ACCESS_KEY=token-tj6vf
+export RANCHER_SECRET_KEY=8pq6g2dpf7njgmncglqrsfggrbwx57.........
+----
+
+* Establecer la configuración en el stack del proyecto para facilitar el trabajo colaborativo. 
+
++
+[source, bash]
+----
+$ pulumi config set rancher2:apiUrl https://ranchitodesa.stic.ual.es/v3
+$ pulumi config set rancher2:accessKey token-tj6vf --secret
+$ pulumi config set rancher2:secretKey 8pq6g2dpf7njgmncglqrsfggrbwx57......... --secret
+----
+
++
+[NOTE]
+====
+Las credenciales configuradas no son enviadas a pulumi.com.
+====
+
++
+Si seguimos esta alternativa, tras hacer esta configuración se genera un archivo `Pulumi.dev.yaml` con la configuración realizada. **Por motivos de seguridad, no se deberá enviar esta información de forma indiscriminada a repositorios públicos**
+
+### Creación de las plantillas de los nodos
+
+Como el cluster de Kubernetes que vamos a crear usa OpenStack como proveedor de infraestructura y cada instalación particular tiene sus propios valores, hay que crear una plantilla en la que se indiquen todos estos parámetros particulares, desde la URL, credenciales de acceso, y demás, hasta los datos particulares del proyecto del que se van a consumir los recursos, pasando por los datos de la imagen a utilizar para los nodos que usen la plantilla.
+
+Las plantillas se crean con el recurso `NodeTemplate` del módulo `rancher2`. Basta con indicar un nombre para la plantilla y un JSON para las opciones. En nuestro caso incluiremos la descripción de la plantilla.
+
+[source,ts]
+----
+const sistemas_ssh_key = fs.readFileSync('/Users/manolo/.ssh/os-sistemas','utf8');
+
+// Create a new rancher2 Large Ubuntu Node Template up to Rancher 2.1.x
+
+const ubuntuLargeTemplate = new rancher2.NodeTemplate("ubuntu-18-04-large-pulumi", {
+    openstackConfig: {
+        authUrl: "http://openstack.stic.ual.es:5000/v3", <1>
+        availabilityZone: "nova", <2>
+        domainName: "default", <3>
+        endpointType: "publicURL",
+        flavorName: "large", <4>
+        floatingIpPool: "ual-net", <5>
+        imageName: "Ubuntu 18.04 LTS", <6>
+        keypairName: "os-sistemas", <7>
+        netName: "Sistemas-prod-net", <8>
+        password: "xxxx", <9>
+        privateKeyFile: fs.readFileSync('/Users/manolo/.ssh/os-sistemas', 'utf8'), <10>
+        region: "RegionOne", <11>
+        secGroups: "default", <12>
+        sshPort: "22", <13>
+        sshUser: "ubuntu", <14>
+        tenantName: "Sistemas-prod", <15> 
+        username: "sistemas", <16>
+        userDataFile: fs.readFileSync('./ubuntu-node-setup.sh', 'utf8') <17>
+    },
+    description: "Ubuntu 18.04 LTS large Pulumi",
+});
+----
+<1> URL de autenticación de la instalación particular de OpenStack
+<2> Nombre de la zona de disponibilidad
+<3> Nombre del dominio OpenStack
+<4> Nombre del sabor para las instancias que usen esta plantilla
+<5> Nombre de la red externa que propociona las direcciones IP flotantes a las instancias que usen esta plantilla
+<6> Nombre de la imagen a usar como base para las instancias que usen esta plantilla
+<7> Nombre del archivo de clave pública del usuario OpenStack para inyectar en las instancias que usen esta plantilla
+<8> Red del proyecto OpenStack a la que se conectarán las instancias que usen esta plantilla
+<9> Contraseña del usuario OpenStack 
+<10> Ubicación del archivo de clave privada para poder interactuar con la instancia. Otra opción (menos segura) es pasar el contenido del archivo de clave privada.
+<11> Región OpenStack
+<12> Grupos de seguridad OpenStack aplicables a la instancia
+<13> Puerto de acceso SSH a la instancia creada
+<14> Nombre de usuario SSH de la imagen de sistema operativo utilizada en los nodos del cluster de Kubernetes
+<15> Nombre del proyecto que propociona los recursos al cluster de Kubernetes
+<16> Nombre de usuario OpenStack propietario del proyecto que propociona los recursos al cluster de Kubernetes
+<17> Opción de pasar un script para configurar la instancia (p.e. para hacer una configuración particular de seguridad de nuestra organización)
+
+Esto define una plantilla asignada a una constante `ubuntuLargeTemplate`. Asignar el recurso creado a una constante o una variable permite manipularlo posteriormente. En nuestro caso se usará para la crear nodos del cluster de Kubernetes.
+
+Análogamente crearemos una plantilla similar pero con un sabor `medium` para nodos que necesiten menos recursos.
+
+[source,ts]
+----
+// Create a new rancher2 Medium Ubuntu Node Template up to Rancher 2.1.x
+
+const ubuntuMediumTemplate = new rancher2.NodeTemplate("ubuntu-18-04-medium-pulumi", {
+    openstackConfig: {
+        authUrl: "http://openstack.stic.ual.es:5000/v3",
+        availabilityZone: "nova",
+        domainName: "default",
+        endpointType: "publicURL",
+        flavorName: "medium", <1>
+        floatingIpPool: "ual-net",
+        imageName: "Ubuntu 18.04 LTS",
+        keypairName: "os-sistemas",
+        netName: "Sistemas-prod-net",
+        password: "xxxx",
+        privateKeyFile: fs.readFileSync('/Users/manolo/.ssh/os-sistemas', 'utf8'),
+        region: "RegionOne",
+        secGroups: "default",
+        sshPort: "22",
+        sshUser: "ubuntu",
+        tenantName: "Sistemas-prod",
+        username: "sistemas",
+        userDataFile: fs.readFileSync('./ubuntu-node-setup.sh', 'utf8')
+        
+    },
+    description: "Ubuntu 18.04 LTS medium Pulumi",
+});
+----
+<1> Sabor `medium` para nodos menos exigentes
+
+### Creación del cluster
+
+### Creación de los pools de nodos del cluster
 
 ## Eliminación de un proyecto
 
