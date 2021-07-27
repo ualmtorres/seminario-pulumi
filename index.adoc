@@ -35,12 +35,15 @@ COLOCA A CONTINUACION LOS OBJETIVOS
 .Objetivos
 * Aprender a desplegar infraestuctura mediante código.
 * Realizar cambios sobre la infraestructura a través del código.
+* Organizar el código despliegue.
 * Gestionar errores de despliegues corruptos.
-* Organizar el código despliegue
 
 [TIP]
 ====
-[line-through]##Disponible el https://github.como/ualmtorres[repositorio] usado en este tutorial##.
+Disponibles los repositorios usados en este tutorial
+
+* https://gitlab.ual.es/mtorres/openstack-pulumi[Configuración de Rancher]
+* https://gitlab.ual.es/mtorres/rancherdesa-pulumi.git[Creación de cluster]
 ====
 
 // Entrar en modo numerado de apartados
@@ -964,12 +967,192 @@ const ubuntuMediumTemplate = new rancher2.NodeTemplate("ubuntu-18-04-medium-pulu
 
 ### Creación del cluster
 
-### Creación de los pools de nodos del cluster
+Los clusters se crean con el recurso `Cluster` del módulo `rancher2`. Basta con indicar un nombre para el cluster y un JSON para las opciones. En nuestro caso incluiremos la descripción de la plantilla, y la configuración de RKE (Rancher Kubernetes Engine), la distribución de Kubernetes certificada por CNCF y que funciona sobre Docker. RKE facilita la creación del cluster de Kubernetes. En nuestro caso configuraremos el plugin de red y usaremos OpenStack como _cloud provider_. En la configuración de OpenStack hay que indicar valores relacionados con nombre de usuario, contraseña, URL, proyecto, red, y demás. En la https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/openstack/[documentación de Rancher OpenStack cloud provider] se puede encontrar más información. También hay información de utilidad en http://ualmtorres.github.io/howtos/RancherOpenStack/[Uso de OpenStack como proveedor de infraestructura en Rancher]
+
+A continuación se muestra el código para crear un cluster usando OpenStack como proveedor de infraestuctura
+
+[source,ts]
+----
+// Create a new rancher2 RKE Cluster
+const cluster = new rancher2.Cluster("cluster-pulumi", {
+    description: "Cluster Pulumi Desa",
+    rkeConfig: {
+        network: {
+            plugin: "canal",
+        },
+        
+        cloudProvider: {
+            name: "openstack",
+            openstackCloudProvider: {
+                blockStorage: {
+                    ignoreVolumeAz: true,
+                    trustDevicePath: false
+                },
+                global: {
+                    authUrl: "http://openstack.stic.ual.es:5000/v3", <1>
+                    domainName: "default", <2>
+                    tenantName: "Sistemas-prod", <3>
+                    password: "sistemas", <4>
+                    username: "xxxx", <5>
+                },
+                loadBalancer: {
+                    createMonitor: false,
+                    floatingNetworkId: "30bf68df-xxxxxx", <6>
+                    manageSecurityGroups: false,
+                    monitorMaxRetries: 0,
+                    subnetId: "aabe1065-xxxxxx", <7>
+                    useOctavia: false
+                },
+                metadata: {
+                    requestTimeout: 0
+                },
+                route: {}
+            }
+        },
+        
+    },
+    clusterAuthEndpoint: {
+        enabled: true
+    }
+});
+----
+<1> URL de autenticación
+<2> Dominio al que pertenece el usuario
+<3> Nombre del proyecto que proporciona la infraestructura
+<4> Contraseña
+<5> Nombre de usuario
+<6> ID de la red externa, la que proporciona las IPs flotantes
+<7> ID de la subred del proyecto que proporciona la infraestructura
+
+[IMPORTANT]
+====
+Los id de redes y subredes se encuntran en el menú `Network | Networks` de OpenStack. Basta con seleccionar la red correspondiente y aparecerán todas sus propiedades, su id es una de ella. **Para el caso de las subredes se usa el ID, no el Network ID**
+====
+
+### Creación de los grupos de nodos (_node pools_) del cluster
+
+Los clusters están formados por grupos de nodos (_node pools_). Un grupo de nodos es un conjunto de nodos definidos de acuerdo con una plantilla y puede tener uno o varios de estos roles: _etcd, control_ y _worker_.
+
+.Consideraciones sobre el número de nodos de un rol
+****
+El cluster tendrá que tener nodos que soporten las funciones de _etcd, control_ y _worker_. Estas funciones pueden estar en nodos separados o compartidas entre nodos. En todo caso, en el cluster se deben cumplir las siguientes restricciones en cuanto al número de nodos de cada rol:
+
+* _etcd_: 1, 3 ó 5
+* _control_: 1 o más
+* _worker_: 1 o más
+****
+
+En nuestro caso crearemos un grupo de nodos para cada función y tendremos las funciones separadas en grupos de nodos diferentes.
+
+Los grupos de nodos se crean con el recurso `NodePool` del módulo `rancher2`. Basta con indicar un nombre para el grupo de nodos y un JSON para las opciones. En nuestro caso incluiremos el cluster al que se aplican, el prefijo que se usará para asignarle nombre a las instancias del grupo de nodos en OpenStack, la plantilla OpenStack a utilizar, la cantidad de nodos que tendrá el grupo y los roles activados (_etcd, control_ y _worker_). De forma predeterminada, los roles están desactivados.
+
+A continuación se muestra el código de los tres grupos de nodos a configurar para el cluster creado anteriormente. Cada grupo de nodos se corresponde con cada uno de los roles (_etcd, control_ y _worker_). Como es sólo para un ejemplo, a cada grupo de nodos sólo se le define un nodo (`quantity: 1`).
+
+[source,ts]
+----
+// Create a new control rancher2 Node Pool <1>
+const controlNodePool = new rancher2.NodePool("control-node-pool-pulumi-desa", {
+    clusterId: cluster.id, <2>
+    hostnamePrefix: "control-pulumi-desa", <3>
+    nodeTemplateId: ubuntuLargeTemplate.id, <4>
+    quantity: 1, <5>
+    controlPlane: true, <6>
+});
+
+// Create a new etcd rancher2 Node Pool <7>
+const etcdNodePool = new rancher2.NodePool("etcd-node-pool-pulumi-desa", {
+    clusterId: cluster.id,
+    hostnamePrefix: "etcd-pulumi-desa",
+    nodeTemplateId: ubuntuMediumTemplate.id, <8>
+    quantity: 1,
+    etcd: true <9>
+});
+
+// Create a new worker rancher2 Node Pool <10>
+const workerNodePool = new rancher2.NodePool("worker-node-pool-pulumi-desa", {
+    clusterId: cluster.id,
+    hostnamePrefix: "worker-pulumi-desa",
+    nodeTemplateId: ubuntuLargeTemplate.id, <11>
+    quantity: 1,
+    worker: true <12>
+});
+----
+<1> Grupo de nodos del rol _control_
+<2> Id del grupo al que pertence el grupo de nodos
+<3> Prefijo para las máquinas virtuales correspondientes a los nodos del grupo
+<4> Plantilla `large` en los nodos del grupo _control_
+<5> 1 nodo en el grupo
+<6> Activación del rol _control_ en el grupo de nodos _control_
+<7> Grupo de nodos del rol _etcd_
+<8> Plantilla `medium` en los nodos del grupo _etcd_
+<9> Activación del rol _etcd_ en el grupo de nodos _etcd_
+<10> Grupo de nodos del rol _worker_
+<11> Plantilla `large` en los nodos del grupo _worker_
+<12> Activación del rol _worker_ en el grupo de nodos _worker_
 
 ## Eliminación de un proyecto
 
+La eliminación de los recursos de un proyecto se realiza con el comando `pulumi destroy`. 
+
+[CAUTION]
+====
+El comando `pulumi destroy` es una operación muy peligrosa ya que elimina totalmente los recursos de un despliegue. *Hay que asegurarse primero de ejecutarla sobre el directorio adecuado*.
+====
+
+La eliminación de los recursos de un proyecto con `pulumi destroy` elimina los recursos pero se sigue conservando el historial de operaciones y la configuración del stack. Para eliminar el stack totalmente, y no sólo sus recursos, ejecutar el comando siguiente
+
+[source, bash]
+----
+$ pulumi stack rm <<nombre-del-stack (p.e. dev)>>
+----
+
+## Solución de problemas en despliegues corruptos
+
+Si mientras se realiza un despliegue se cancela antes de que finalice aparecerá un mensaje que indica que el despligue tiene recursos con operaciones pendientes. Como motivos de la cancelación podemos tener cancelaciones del proceso por parte del usuario, cortes en la red o un error de ejecución en el CLI de Pulumi.
+
+Como Pulumi no tiene forma de conocer si una operación que ha iniciado se ha llevado a cabo correctamente o ha fallado, esto se traduce en que pueden haberse creado recursos y que Pulumi no tenga conocimiento. Por ello, lo siguiente que se debe hace es cancelar el despliegue con el comando siguiente
+
+[source, bash]
+----
+$ pulumi cancel
+----
+
+Tras esto, se debe exportar y volver a importar el stack
+
+[source, bash]
+----
+$ pulumi stack export | pulumi stack import
+----
+
+Para actualizar el estado el stack hay que ejecutar el comando
+
+[source, bash]
+----
+$ pulumi refresh
+----
+
+### Restaurar a partir de un estado corrupto
+
+A veces, la única forma de restaurar un despliegue corrupto es revisar el archivo de despliegue y ver las operaciones que se han quedado pendientes. Para ello, primero exportaremos a un archivo (p.e. `state.json`) el estado del despliegue con el comando siguiente:
+
+[source, bash]
+----
+$ pulumi stack export --file state.json
+----
+
+Seguir estos pasos:
+
+. Ir a la sección `pending_operations` del archivo de despliegue (p.e. `state.json`) y eliminar dichos recursos de la infraestructura en el caso de que hubiesen sido creados y que Pulumi no tuviese conocimiento. 
+. Editar ese archivo y eliminar el contenido del array `pending_operations` dejando el array vacío. Guardar los cambios en el archivo.
+. Volver a importar en el que ya no aparecen operaciones pendientes
+
++
+[source, bash]
+----
+$ pulumi stack import --file state.json
+----
+
 [NOTE]
 ====
-The resources in the stack have been deleted, but the history and configuration associated with the stack are still maintained. 
-If you want to remove the stack completely, run 'pulumi stack rm dev'.
+Para más información sobre solución de errores consultar las secciones https://www.pulumi.com/docs/troubleshooting/#interrupted-update-recovery[Recovering from an Interrupted Update] y https://www.pulumi.com/docs/troubleshooting/#editing-your-deployment[Manually Editing Your Deployment] de la https://www.pulumi.com/docs/troubleshooting/[guía de solución de errores de Pulumi].
 ====

@@ -470,10 +470,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#trueconfiguración-de-credenciales-de-acceso-a-rancher-desde-pulumi">5.4. Configuración de credenciales de acceso a Rancher desde Pulumi</a></li>
 <li><a href="#truecreación-de-las-plantillas-de-los-nodos">5.5. Creación de las plantillas de los nodos</a></li>
 <li><a href="#truecreación-del-cluster">5.6. Creación del cluster</a></li>
-<li><a href="#truecreación-de-los-pools-de-nodos-del-cluster">5.7. Creación de los pools de nodos del cluster</a></li>
+<li><a href="#truecreación-de-los-grupos-de-nodos-node-pools-del-cluster">5.7. Creación de los grupos de nodos (<em>node pools</em>) del cluster</a></li>
 </ul>
 </li>
 <li><a href="#trueeliminación-de-un-proyecto">6. Eliminación de un proyecto</a></li>
+<li><a href="#truesolución-de-problemas-en-despliegues-corruptos">7. Solución de problemas en despliegues corruptos</a>
+<ul class="sectlevel2">
+<li><a href="#truerestaurar-a-partir-de-un-estado-corrupto">7.1. Restaurar a partir de un estado corrupto</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -503,10 +508,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Realizar cambios sobre la infraestructura a través del código.</p>
 </li>
 <li>
-<p>Gestionar errores de despliegues corruptos.</p>
+<p>Organizar el código despliegue.</p>
 </li>
 <li>
-<p>Organizar el código despliegue</p>
+<p>Gestionar errores de despliegues corruptos.</p>
 </li>
 </ul>
 </div>
@@ -518,7 +523,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </td>
 <td class="content">
 <div class="paragraph">
-<p><span class="line-through">Disponible el <a href="https://github.como/ualmtorres">repositorio</a> usado en este tutorial</span>.</p>
+<p>Disponibles los repositorios usados en este tutorial</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://gitlab.ual.es/mtorres/openstack-pulumi">Configuración de Rancher</a></p>
+</li>
+<li>
+<p><a href="https://gitlab.ual.es/mtorres/rancherdesa-pulumi.git">Creación de cluster</a></p>
+</li>
+</ul>
 </div>
 </td>
 </tr>
@@ -1963,17 +1978,316 @@ const ubuntuMediumTemplate = new rancher2.NodeTemplate("ubuntu-18-04-medium-pulu
 </div>
 <div class="sect2">
 <h3 id="truecreación-del-cluster"><a class="anchor" href="#truecreación-del-cluster"></a>5.6. Creación del cluster</h3>
+<div class="paragraph">
+<p>Los clusters se crean con el recurso <code>Cluster</code> del módulo <code>rancher2</code>. Basta con indicar un nombre para el cluster y un JSON para las opciones. En nuestro caso incluiremos la descripción de la plantilla, y la configuración de RKE (Rancher Kubernetes Engine), la distribución de Kubernetes certificada por CNCF y que funciona sobre Docker. RKE facilita la creación del cluster de Kubernetes. En nuestro caso configuraremos el plugin de red y usaremos OpenStack como <em>cloud provider</em>. En la configuración de OpenStack hay que indicar valores relacionados con nombre de usuario, contraseña, URL, proyecto, red, y demás. En la <a href="https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/openstack/">documentación de Rancher OpenStack cloud provider</a> se puede encontrar más información. También hay información de utilidad en <a href="http://ualmtorres.github.io/howtos/RancherOpenStack/">Uso de OpenStack como proveedor de infraestructura en Rancher</a></p>
+</div>
+<div class="paragraph">
+<p>A continuación se muestra el código para crear un cluster usando OpenStack como proveedor de infraestuctura</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">// Create a new rancher2 RKE Cluster
+const cluster = new rancher2.Cluster("cluster-pulumi", {
+    description: "Cluster Pulumi Desa",
+    rkeConfig: {
+        network: {
+            plugin: "canal",
+        },
 
+        cloudProvider: {
+            name: "openstack",
+            openstackCloudProvider: {
+                blockStorage: {
+                    ignoreVolumeAz: true,
+                    trustDevicePath: false
+                },
+                global: {
+                    authUrl: "http://openstack.stic.ual.es:5000/v3", <i class="conum" data-value="1"></i><b>(1)</b>
+                    domainName: "default", <i class="conum" data-value="2"></i><b>(2)</b>
+                    tenantName: "Sistemas-prod", <i class="conum" data-value="3"></i><b>(3)</b>
+                    password: "sistemas", <i class="conum" data-value="4"></i><b>(4)</b>
+                    username: "xxxx", <i class="conum" data-value="5"></i><b>(5)</b>
+                },
+                loadBalancer: {
+                    createMonitor: false,
+                    floatingNetworkId: "30bf68df-xxxxxx", <i class="conum" data-value="6"></i><b>(6)</b>
+                    manageSecurityGroups: false,
+                    monitorMaxRetries: 0,
+                    subnetId: "aabe1065-xxxxxx", <i class="conum" data-value="7"></i><b>(7)</b>
+                    useOctavia: false
+                },
+                metadata: {
+                    requestTimeout: 0
+                },
+                route: {}
+            }
+        },
+
+    },
+    clusterAuthEndpoint: {
+        enabled: true
+    }
+});</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>URL de autenticación</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Dominio al que pertenece el usuario</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Nombre del proyecto que proporciona la infraestructura</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Contraseña</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Nombre de usuario</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>ID de la red externa, la que proporciona las IPs flotantes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>ID de la subred del proyecto que proporciona la infraestructura</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Los id de redes y subredes se encuntran en el menú <code>Network | Networks</code> de OpenStack. Basta con seleccionar la red correspondiente y aparecerán todas sus propiedades, su id es una de ella. <strong>Para el caso de las subredes se usa el ID, no el Network ID</strong></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
-<h3 id="truecreación-de-los-pools-de-nodos-del-cluster"><a class="anchor" href="#truecreación-de-los-pools-de-nodos-del-cluster"></a>5.7. Creación de los pools de nodos del cluster</h3>
+<h3 id="truecreación-de-los-grupos-de-nodos-node-pools-del-cluster"><a class="anchor" href="#truecreación-de-los-grupos-de-nodos-node-pools-del-cluster"></a>5.7. Creación de los grupos de nodos (<em>node pools</em>) del cluster</h3>
+<div class="paragraph">
+<p>Los clusters están formados por grupos de nodos (<em>node pools</em>). Un grupo de nodos es un conjunto de nodos definidos de acuerdo con una plantilla y puede tener uno o varios de estos roles: <em>etcd, control</em> y <em>worker</em>.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Consideraciones sobre el número de nodos de un rol</div>
+<div class="paragraph">
+<p>El cluster tendrá que tener nodos que soporten las funciones de <em>etcd, control</em> y <em>worker</em>. Estas funciones pueden estar en nodos separados o compartidas entre nodos. En todo caso, en el cluster se deben cumplir las siguientes restricciones en cuanto al número de nodos de cada rol:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><em>etcd</em>: 1, 3 ó 5</p>
+</li>
+<li>
+<p><em>control</em>: 1 o más</p>
+</li>
+<li>
+<p><em>worker</em>: 1 o más</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>En nuestro caso crearemos un grupo de nodos para cada función y tendremos las funciones separadas en grupos de nodos diferentes.</p>
+</div>
+<div class="paragraph">
+<p>Los grupos de nodos se crean con el recurso <code>NodePool</code> del módulo <code>rancher2</code>. Basta con indicar un nombre para el grupo de nodos y un JSON para las opciones. En nuestro caso incluiremos el cluster al que se aplican, el prefijo que se usará para asignarle nombre a las instancias del grupo de nodos en OpenStack, la plantilla OpenStack a utilizar, la cantidad de nodos que tendrá el grupo y los roles activados (<em>etcd, control</em> y <em>worker</em>). De forma predeterminada, los roles están desactivados.</p>
+</div>
+<div class="paragraph">
+<p>A continuación se muestra el código de los tres grupos de nodos a configurar para el cluster creado anteriormente. Cada grupo de nodos se corresponde con cada uno de los roles (<em>etcd, control</em> y <em>worker</em>). Como es sólo para un ejemplo, a cada grupo de nodos sólo se le define un nodo (<code>quantity: 1</code>).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="ts" class="language-ts hljs">// Create a new control rancher2 Node Pool <i class="conum" data-value="1"></i><b>(1)</b>
+const controlNodePool = new rancher2.NodePool("control-node-pool-pulumi-desa", {
+    clusterId: cluster.id, <i class="conum" data-value="2"></i><b>(2)</b>
+    hostnamePrefix: "control-pulumi-desa", <i class="conum" data-value="3"></i><b>(3)</b>
+    nodeTemplateId: ubuntuLargeTemplate.id, <i class="conum" data-value="4"></i><b>(4)</b>
+    quantity: 1, <i class="conum" data-value="5"></i><b>(5)</b>
+    controlPlane: true, <i class="conum" data-value="6"></i><b>(6)</b>
+});
 
+// Create a new etcd rancher2 Node Pool <i class="conum" data-value="7"></i><b>(7)</b>
+const etcdNodePool = new rancher2.NodePool("etcd-node-pool-pulumi-desa", {
+    clusterId: cluster.id,
+    hostnamePrefix: "etcd-pulumi-desa",
+    nodeTemplateId: ubuntuMediumTemplate.id, <i class="conum" data-value="8"></i><b>(8)</b>
+    quantity: 1,
+    etcd: true <i class="conum" data-value="9"></i><b>(9)</b>
+});
+
+// Create a new worker rancher2 Node Pool <i class="conum" data-value="10"></i><b>(10)</b>
+const workerNodePool = new rancher2.NodePool("worker-node-pool-pulumi-desa", {
+    clusterId: cluster.id,
+    hostnamePrefix: "worker-pulumi-desa",
+    nodeTemplateId: ubuntuLargeTemplate.id, <i class="conum" data-value="11"></i><b>(11)</b>
+    quantity: 1,
+    worker: true <i class="conum" data-value="12"></i><b>(12)</b>
+});</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Grupo de nodos del rol <em>control</em></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Id del grupo al que pertence el grupo de nodos</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Prefijo para las máquinas virtuales correspondientes a los nodos del grupo</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Plantilla <code>large</code> en los nodos del grupo <em>control</em></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>1 nodo en el grupo</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Activación del rol <em>control</em> en el grupo de nodos <em>control</em></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>Grupo de nodos del rol <em>etcd</em></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>Plantilla <code>medium</code> en los nodos del grupo <em>etcd</em></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>Activación del rol <em>etcd</em> en el grupo de nodos <em>etcd</em></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="10"></i><b>10</b></td>
+<td>Grupo de nodos del rol <em>worker</em></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="11"></i><b>11</b></td>
+<td>Plantilla <code>large</code> en los nodos del grupo <em>worker</em></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="12"></i><b>12</b></td>
+<td>Activación del rol <em>worker</em> en el grupo de nodos <em>worker</em></td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="trueeliminación-de-un-proyecto"><a class="anchor" href="#trueeliminación-de-un-proyecto"></a>6. Eliminación de un proyecto</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>La eliminación de los recursos de un proyecto se realiza con el comando <code>pulumi destroy</code>.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>El comando <code>pulumi destroy</code> es una operación muy peligrosa ya que elimina totalmente los recursos de un despliegue. <strong>Hay que asegurarse primero de ejecutarla sobre el directorio adecuado</strong>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>La eliminación de los recursos de un proyecto con <code>pulumi destroy</code> elimina los recursos pero se sigue conservando el historial de operaciones y la configuración del stack. Para eliminar el stack totalmente, y no sólo sus recursos, ejecutar el comando siguiente</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">$ pulumi stack rm &lt;&lt;nombre-del-stack (p.e. dev)&gt;&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truesolución-de-problemas-en-despliegues-corruptos"><a class="anchor" href="#truesolución-de-problemas-en-despliegues-corruptos"></a>7. Solución de problemas en despliegues corruptos</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Si mientras se realiza un despliegue se cancela antes de que finalice aparecerá un mensaje que indica que el despligue tiene recursos con operaciones pendientes. Como motivos de la cancelación podemos tener cancelaciones del proceso por parte del usuario, cortes en la red o un error de ejecución en el CLI de Pulumi.</p>
+</div>
+<div class="paragraph">
+<p>Como Pulumi no tiene forma de conocer si una operación que ha iniciado se ha llevado a cabo correctamente o ha fallado, esto se traduce en que pueden haberse creado recursos y que Pulumi no tenga conocimiento. Por ello, lo siguiente que se debe hace es cancelar el despliegue con el comando siguiente</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">$ pulumi cancel</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Tras esto, se debe exportar y volver a importar el stack</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">$ pulumi stack export | pulumi stack import</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Para actualizar el estado el stack hay que ejecutar el comando</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">$ pulumi refresh</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="truerestaurar-a-partir-de-un-estado-corrupto"><a class="anchor" href="#truerestaurar-a-partir-de-un-estado-corrupto"></a>7.1. Restaurar a partir de un estado corrupto</h3>
+<div class="paragraph">
+<p>A veces, la única forma de restaurar un despliegue corrupto es revisar el archivo de despliegue y ver las operaciones que se han quedado pendientes. Para ello, primero exportaremos a un archivo (p.e. <code>state.json</code>) el estado del despliegue con el comando siguiente:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">$ pulumi stack export --file state.json</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Seguir estos pasos:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Ir a la sección <code>pending_operations</code> del archivo de despliegue (p.e. <code>state.json</code>) y eliminar dichos recursos de la infraestructura en el caso de que hubiesen sido creados y que Pulumi no tuviese conocimiento.</p>
+</li>
+<li>
+<p>Editar ese archivo y eliminar el contenido del array <code>pending_operations</code> dejando el array vacío. Guardar los cambios en el archivo.</p>
+</li>
+<li>
+<p>Volver a importar en el que ya no aparecen operaciones pendientes</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="bash" class="language-bash hljs">$ pulumi stack import --file state.json</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -1982,8 +2296,7 @@ const ubuntuMediumTemplate = new rancher2.NodeTemplate("ubuntu-18-04-medium-pulu
 </td>
 <td class="content">
 <div class="paragraph">
-<p>The resources in the stack have been deleted, but the history and configuration associated with the stack are still maintained.
-If you want to remove the stack completely, run 'pulumi stack rm dev'.</p>
+<p>Para más información sobre solución de errores consultar las secciones <a href="https://www.pulumi.com/docs/troubleshooting/#interrupted-update-recovery">Recovering from an Interrupted Update</a> y <a href="https://www.pulumi.com/docs/troubleshooting/#editing-your-deployment">Manually Editing Your Deployment</a> de la <a href="https://www.pulumi.com/docs/troubleshooting/">guía de solución de errores de Pulumi</a>.</p>
 </div>
 </td>
 </tr>
@@ -1992,9 +2305,10 @@ If you want to remove the stack completely, run 'pulumi stack rm dev'.</p>
 </div>
 </div>
 </div>
+</div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-26 21:38:31 +0200
+Last updated 2021-07-27 21:52:10 +0200
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/github.min.css">
